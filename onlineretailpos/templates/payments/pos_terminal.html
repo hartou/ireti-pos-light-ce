@@ -1,0 +1,1137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}POS Terminal - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+    .pos-container {
+        min-height: 100vh;
+        background: #f8f9fa;
+        padding: 0;
+    }
+    
+    .cashier-panel {
+        background: white;
+        height: 100vh;
+        overflow-y: auto;
+        border-right: 3px solid #dee2e6;
+        position: sticky;
+        top: 0;
+    }
+    
+    .customer-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+    
+    .terminal-header {
+        background: #343a40;
+        color: white;
+        padding: 15px 20px;
+        margin: -15px -20px 20px -20px;
+    }
+    
+    .amount-input {
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        border: 2px solid #007bff;
+        background: #f8f9fa;
+        color: #007bff;
+    }
+    
+    .amount-display-large {
+        font-size: 4rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        margin-bottom: 20px;
+    }
+    
+    .keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+    }
+    
+    .keypad-btn {
+        aspect-ratio: 1;
+        font-size: 1.5rem;
+        font-weight: 600;
+        border: 2px solid #dee2e6;
+        background: white;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    
+    .keypad-btn:hover {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+        transform: translateY(-2px);
+    }
+    
+    .keypad-btn.wide {
+        grid-column: span 2;
+    }
+    
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .action-btn {
+        padding: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-process {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-process:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+    
+    .btn-clear {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-clear:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+    
+    .transaction-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+    
+    .transaction-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .transaction-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-indicator {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+    
+    .terminal-status {
+        background: #17a2b8;
+        color: white;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 20px 0;
+    }
+    
+    .payment-method-btn {
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        background: white;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .payment-method-btn:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+    
+    .payment-method-btn.active {
+        border-color: #007bff;
+        background: #007bff;
+        color: white;
+    }
+    
+    .customer-instructions {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        max-width: 80%;
+        text-align: center;
+    }
+    
+    /* Mobile-First Responsive Design */
+    @media (max-width: 1200px) {
+        .cashier-panel {
+            height: auto;
+            min-height: 70vh;
+            border-right: none;
+            border-bottom: 3px solid #dee2e6;
+        }
+        
+        .customer-display {
+            height: 50vh;
+            min-height: 400px;
+        }
+        
+        .amount-display-large {
+            font-size: 3.5rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .cashier-panel {
+            height: auto;
+            border-right: none;
+            border-bottom: 3px solid #dee2e6;
+        }
+        
+        .customer-display {
+            height: 50vh;
+            min-height: 400px;
+        }
+        
+        .amount-display-large {
+            font-size: 3rem;
+        }
+        
+        .keypad {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 25px 0;
+        }
+        
+        .keypad-btn {
+            font-size: 1.4rem;
+            min-height: 60px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .pos-container {
+            padding: 0;
+        }
+        
+        .cashier-panel {
+            padding: 15px;
+            height: auto;
+            min-height: 60vh;
+        }
+        
+        .customer-display {
+            height: 40vh;
+            min-height: 300px;
+        }
+        
+        .terminal-header {
+            margin: -15px -15px 20px -15px;
+            padding: 12px 15px;
+        }
+        
+        .amount-input {
+            font-size: 2rem;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .amount-display-large {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .keypad {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .keypad-btn {
+            font-size: 1.3rem;
+            min-height: 65px;
+            border-width: 2px;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .action-buttons {
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .action-btn {
+            padding: 18px;
+            font-size: 1.2rem;
+            min-height: 60px;
+            touch-action: manipulation;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .cashier-panel {
+            padding: 10px;
+        }
+        
+        .terminal-header {
+            margin: -10px -10px 15px -10px;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .amount-input {
+            font-size: 1.8rem;
+            padding: 12px;
+        }
+        
+        .amount-display-large {
+            font-size: 2rem;
+        }
+        
+        .keypad {
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .keypad-btn {
+            font-size: 1.2rem;
+            min-height: 70px;
+            border-radius: 12px;
+        }
+        
+        .keypad-btn.wide {
+            font-size: 1rem;
+        }
+        
+        .action-btn {
+            padding: 20px;
+            font-size: 1.1rem;
+            min-height: 65px;
+            border-radius: 12px;
+        }
+        
+        .customer-display {
+            height: 35vh;
+            min-height: 250px;
+        }
+    }
+    
+    /* Touch and interaction enhancements */
+    .keypad-btn:active,
+    .keypad-btn.touching {
+        transform: scale(0.95) translateY(2px);
+        transition: all 0.1s ease;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .action-btn:active,
+    .action-btn.touching {
+        transform: scale(0.98);
+        transition: all 0.1s ease;
+    }
+    
+    /* Improved hover states for touch devices */
+    @media (hover: none) and (pointer: coarse) {
+        .keypad-btn:hover {
+            background: white;
+            border-color: #dee2e6;
+            transform: none;
+        }
+        
+        .keypad-btn:focus,
+        .keypad-btn:active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+            outline: 2px solid #0056b3;
+            outline-offset: 2px;
+        }
+    }
+    
+    /* Prevent text selection and callouts on touch elements */
+    .keypad-btn,
+    .action-btn,
+    .quick-amount-btn {
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* Better mobile viewport handling */
+    @media (max-width: 768px) {
+        .customer-display {
+            height: calc(var(--vh, 1vh) * 40);
+            min-height: 280px;
+        }
+        
+        .cashier-panel {
+            min-height: calc(var(--vh, 1vh) * 60);
+        }
+    }
+    
+    /* Orientation-specific adjustments */
+    @media (max-width: 768px) and (orientation: landscape) {
+        .customer-display {
+            height: 30vh;
+            min-height: 200px;
+        }
+        
+        .amount-display-large {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .keypad {
+            margin: 15px 0;
+        }
+        
+        .keypad-btn {
+            min-height: 50px;
+            font-size: 1.1rem;
+        }
+    }
+    
+    .processing-animation {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 10;
+    }
+    
+    .pulse-ring {
+        width: 150px;
+        height: 150px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        position: relative;
+        margin: 0 auto 20px;
+    }
+    
+    .pulse-ring:before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border: 5px solid rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        animation: pulse 2s ease-out infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1.3);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <div class="row g-0 h-100">
+        <!-- Cashier Panel -->
+        <div class="col-lg-6">
+            <div class="cashier-panel p-4">
+                <div class="terminal-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cash-register"></i> POS Terminal
+                        <span class="float-end">
+                            <i class="fas fa-user"></i> {{ request.user.username }}
+                        </span>
+                    </h4>
+                </div>
+
+                <!-- Amount Input -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Transaction Amount</label>
+                    <input type="text" 
+                           class="form-control amount-input" 
+                           id="amount-input" 
+                           value="0.00" 
+                           readonly>
+                </div>
+
+                <!-- Keypad -->
+                <div class="keypad">
+                    <button class="keypad-btn" data-number="1">1</button>
+                    <button class="keypad-btn" data-number="2">2</button>
+                    <button class="keypad-btn" data-number="3">3</button>
+                    <button class="keypad-btn" data-number="4">4</button>
+                    <button class="keypad-btn" data-number="5">5</button>
+                    <button class="keypad-btn" data-number="6">6</button>
+                    <button class="keypad-btn" data-number="7">7</button>
+                    <button class="keypad-btn" data-number="8">8</button>
+                    <button class="keypad-btn" data-number="9">9</button>
+                    <button class="keypad-btn" data-action="decimal">.</button>
+                    <button class="keypad-btn" data-number="0">0</button>
+                    <button class="keypad-btn" data-action="backspace">
+                        <i class="fas fa-backspace"></i>
+                    </button>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="payment-methods">
+                    <button class="payment-method-btn active" data-method="card">
+                        <i class="fas fa-credit-card"></i> Card
+                    </button>
+                    <button class="payment-method-btn" data-method="terminal">
+                        <i class="fas fa-tablet-alt"></i> Terminal
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="action-btn btn-clear" id="clear-btn">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                    <button class="action-btn btn-process" id="process-btn" disabled>
+                        <i class="fas fa-credit-card"></i> Process Payment
+                    </button>
+                </div>
+
+                <!-- Terminal Status -->
+                <div class="terminal-status" id="terminal-status">
+                    <i class="fas fa-circle text-success"></i> Terminal Ready
+                    <span class="float-end">
+                        <i class="fas fa-wifi"></i> Connected
+                    </span>
+                </div>
+
+                <!-- Customer Info (Quick) -->
+                <div class="mb-3">
+                    <label class="form-label">Customer (Optional)</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="customer-name" 
+                           placeholder="Customer name">
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="mt-4">
+                    <h6 class="fw-bold">
+                        <i class="fas fa-history"></i> Recent Transactions
+                        <button class="btn btn-sm btn-outline-primary float-end" id="refresh-transactions">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </h6>
+                    <div class="transaction-list" id="transaction-list">
+                        <div class="text-center p-3 text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Display -->
+        <div class="col-lg-6">
+            <div class="customer-display">
+                <div class="status-indicator" id="display-status">
+                    <i class="fas fa-shopping-cart"></i> Ready
+                </div>
+
+                <div id="transaction-display">
+                    <div class="amount-display-large" id="customer-amount">$0.00</div>
+                    
+                    <div class="h4 mb-4" id="transaction-status">
+                        Enter amount to continue
+                    </div>
+
+                    <div class="customer-instructions" id="customer-instructions">
+                        <p class="mb-2">
+                            <i class="fas fa-info-circle"></i> Welcome to {{ store_name }}
+                        </p>
+                        <p class="mb-0 small">
+                            Enter purchase amount and select payment method
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Processing Animation -->
+                <div class="processing-animation" id="processing-animation">
+                    <div class="pulse-ring"></div>
+                    <h3 id="processing-title">Processing Payment...</h3>
+                    <p id="processing-subtitle">Please wait</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// POS Terminal Configuration
+const stripe = Stripe('{{ stripe_publishable_key }}');
+let currentAmount = 0;
+let selectedPaymentMethod = 'card';
+let isProcessing = false;
+
+// Amount Management
+function updateAmount(value) {
+    if (isProcessing) return;
+    
+    const amountInput = document.getElementById('amount-input');
+    const customerAmount = document.getElementById('customer-amount');
+    const processBtn = document.getElementById('process-btn');
+    
+    currentAmount = parseFloat(value) || 0;
+    const formattedAmount = currentAmount.toFixed(2);
+    
+    amountInput.value = formattedAmount;
+    customerAmount.textContent = `$${formattedAmount}`;
+    
+    // Enable/disable process button
+    processBtn.disabled = currentAmount < 0.50;
+    
+    // Update customer display
+    updateCustomerDisplay();
+}
+
+function updateCustomerDisplay() {
+    const statusEl = document.getElementById('transaction-status');
+    const instructionsEl = document.getElementById('customer-instructions');
+    
+    if (currentAmount >= 0.50) {
+        statusEl.textContent = `Ready to pay with ${selectedPaymentMethod}`;
+        instructionsEl.innerHTML = `
+            <p class="mb-2">
+                <i class="fas fa-credit-card"></i> $${currentAmount.toFixed(2)} - ${selectedPaymentMethod.toUpperCase()}
+            </p>
+            <p class="mb-0 small">
+                Cashier will process your payment
+            </p>
+        `;
+    } else {
+        statusEl.textContent = 'Enter amount to continue';
+        instructionsEl.innerHTML = `
+            <p class="mb-2">
+                <i class="fas fa-info-circle"></i> Welcome to {{ store_name }}
+            </p>
+            <p class="mb-0 small">
+                Enter purchase amount and select payment method
+            </p>
+        `;
+    }
+}
+
+// Keypad Functionality
+function setupKeypad() {
+    document.querySelectorAll('.keypad-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (isProcessing) return;
+            
+            if (this.dataset.number !== undefined) {
+                handleNumberInput(this.dataset.number);
+            } else if (this.dataset.action) {
+                handleKeypadAction(this.dataset.action);
+            }
+        });
+    });
+}
+
+function handleNumberInput(number) {
+    const currentValue = document.getElementById('amount-input').value;
+    let newValue;
+    
+    if (currentValue === '0.00' || currentValue === '0') {
+        newValue = number;
+    } else {
+        newValue = currentValue + number;
+    }
+    
+    // Parse and validate
+    const parsedValue = parseFloat(newValue) || 0;
+    if (parsedValue <= 999999.99) {  // Max amount limit
+        updateAmount(newValue);
+    }
+}
+
+function handleKeypadAction(action) {
+    const currentValue = document.getElementById('amount-input').value;
+    
+    switch (action) {
+        case 'decimal':
+            if (!currentValue.includes('.')) {
+                updateAmount(currentValue + '.');
+            }
+            break;
+            
+        case 'backspace':
+            if (currentValue.length > 1) {
+                const newValue = currentValue.slice(0, -1);
+                updateAmount(newValue);
+            } else {
+                updateAmount('0.00');
+            }
+            break;
+    }
+}
+
+// Payment Method Selection
+function setupPaymentMethods() {
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (isProcessing) return;
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.payment-method-btn').forEach(b => 
+                b.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Update selected method
+            selectedPaymentMethod = this.dataset.method;
+            updateCustomerDisplay();
+            
+            // Update process button text
+            const processBtn = document.getElementById('process-btn');
+            const icon = selectedPaymentMethod === 'terminal' ? 'tablet-alt' : 'credit-card';
+            processBtn.innerHTML = `<i class="fas fa-${icon}"></i> Process ${selectedPaymentMethod.toUpperCase()} Payment`;
+        });
+    });
+}
+
+// Payment Processing
+async function processPayment() {
+    if (currentAmount < 0.50 || isProcessing) return;
+    
+    isProcessing = true;
+    showProcessingState();
+    
+    try {
+        if (selectedPaymentMethod === 'card') {
+            await processCardPayment();
+        } else if (selectedPaymentMethod === 'terminal') {
+            await processTerminalPayment();
+        }
+    } catch (error) {
+        showError('Payment Error', error.message);
+    } finally {
+        isProcessing = false;
+        hideProcessingState();
+    }
+}
+
+async function processCardPayment() {
+    updateProcessingState('Creating payment intent...', 'Setting up secure payment');
+    
+    // Create payment intent
+    const response = await fetch('/payments/api/intent/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            amount: Math.round(currentAmount * 100),
+            currency: 'usd',
+            description: `POS Sale - $${currentAmount.toFixed(2)}`,
+            metadata: {
+                customer_name: document.getElementById('customer-name').value || 'Walk-in Customer',
+                source: 'pos_terminal',
+                terminal_id: 'pos_001'
+            }
+        })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+        throw new Error(result.message || 'Failed to create payment');
+    }
+    
+    updateProcessingState('Payment created successfully!', 'Continue with card payment in customer interface');
+    
+    // Simulate successful payment for demo
+    setTimeout(() => {
+        showPaymentSuccess(result.payment_intent);
+    }, 2000);
+}
+
+async function processTerminalPayment() {
+    updateProcessingState('Connecting to terminal...', 'Please wait for terminal reader');
+    
+    // This would integrate with Stripe Terminal
+    // For now, simulate terminal connection
+    setTimeout(() => {
+        updateProcessingState('Present card to reader', 'Customer should insert, tap, or swipe card');
+        
+        // Simulate card presentation
+        setTimeout(() => {
+            updateProcessingState('Processing payment...', 'Please do not remove card');
+            
+            // Simulate successful payment
+            setTimeout(() => {
+                showPaymentSuccess({
+                    id: `pi_terminal_${Date.now()}`,
+                    amount: currentAmount * 100,
+                    status: 'succeeded'
+                });
+            }, 3000);
+        }, 2000);
+    }, 1000);
+}
+
+function showProcessingState() {
+    const transactionDisplay = document.getElementById('transaction-display');
+    const processingAnimation = document.getElementById('processing-animation');
+    const statusIndicator = document.getElementById('display-status');
+    
+    transactionDisplay.style.display = 'none';
+    processingAnimation.style.display = 'block';
+    statusIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
+    statusIndicator.className = 'status-indicator';
+}
+
+function updateProcessingState(title, subtitle) {
+    document.getElementById('processing-title').textContent = title;
+    document.getElementById('processing-subtitle').textContent = subtitle;
+}
+
+function hideProcessingState() {
+    const transactionDisplay = document.getElementById('transaction-display');
+    const processingAnimation = document.getElementById('processing-animation');
+    const statusIndicator = document.getElementById('display-status');
+    
+    transactionDisplay.style.display = 'block';
+    processingAnimation.style.display = 'none';
+    statusIndicator.innerHTML = '<i class="fas fa-shopping-cart"></i> Ready';
+}
+
+function showPaymentSuccess(payment) {
+    updateProcessingState('Payment Successful!', `$${(payment.amount / 100).toFixed(2)} processed successfully`);
+    
+    const statusIndicator = document.getElementById('display-status');
+    statusIndicator.innerHTML = '<i class="fas fa-check-circle text-success"></i> Success';
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+        resetTransaction();
+        hideProcessingState();
+    }, 3000);
+    
+    // Refresh transaction list
+    loadRecentTransactions();
+}
+
+function showError(title, message) {
+    updateProcessingState('Payment Failed', message);
+    
+    const statusIndicator = document.getElementById('display-status');
+    statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Error';
+    
+    setTimeout(() => {
+        hideProcessingState();
+    }, 3000);
+}
+
+// Transaction Management
+function resetTransaction() {
+    currentAmount = 0;
+    updateAmount(0);
+    document.getElementById('customer-name').value = '';
+    selectedPaymentMethod = 'card';
+    
+    // Reset payment method selection
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.method === 'card');
+    });
+}
+
+function clearTransaction() {
+    if (!isProcessing) {
+        resetTransaction();
+    }
+}
+
+// Recent Transactions
+async function loadRecentTransactions() {
+    try {
+        const response = await fetch('/payments/api/recent/');
+        const result = await response.json();
+        
+        const container = document.getElementById('transaction-list');
+        
+        if (result.success && result.transactions.length > 0) {
+            container.innerHTML = result.transactions.slice(0, 5).map(tx => `
+                <div class="transaction-item">
+                    <div>
+                        <div class="fw-bold">$${(tx.amount / 100).toFixed(2)}</div>
+                        <small class="text-muted">${new Date(tx.created_at).toLocaleTimeString()}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-${tx.status === 'succeeded' ? 'success' : tx.status === 'failed' ? 'danger' : 'warning'} mb-1">
+                            ${tx.status}
+                        </span>
+                        <br>
+                        <small class="text-muted">${tx.customer_name || 'Anonymous'}</small>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<div class="text-center p-3 text-muted"><i class="fas fa-inbox"></i> No recent transactions</div>';
+        }
+    } catch (error) {
+        document.getElementById('transaction-list').innerHTML = 
+            '<div class="text-center p-3 text-danger"><i class="fas fa-exclamation-triangle"></i> Error loading transactions</div>';
+    }
+}
+
+// Utility Functions
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialize Terminal
+document.addEventListener('DOMContentLoaded', function() {
+    setupKeypad();
+    setupPaymentMethods();
+    loadRecentTransactions();
+    setupMobileEnhancements();
+    
+    // Clear button
+    document.getElementById('clear-btn').addEventListener('click', clearTransaction);
+    
+    // Process button
+    document.getElementById('process-btn').addEventListener('click', processPayment);
+    
+    // Refresh transactions
+    document.getElementById('refresh-transactions').addEventListener('click', loadRecentTransactions);
+    
+    // Set initial state
+    updateAmount(0);
+});
+
+// Mobile-specific enhancements for POS terminal
+function setupMobileEnhancements() {
+    // Set up touch feedback for all interactive elements
+    const touchElements = document.querySelectorAll('.keypad-btn, .action-btn, .payment-method-btn');
+    touchElements.forEach(element => {
+        let touchTimeout;
+        
+        element.addEventListener('touchstart', function(e) {
+            this.classList.add('touching');
+            
+            // Add haptic feedback if available
+            if ('vibrate' in navigator) {
+                navigator.vibrate(10);
+            }
+            
+            touchTimeout = setTimeout(() => {
+                this.classList.remove('touching');
+            }, 150);
+        }, { passive: true });
+        
+        element.addEventListener('touchend', function() {
+            clearTimeout(touchTimeout);
+            setTimeout(() => {
+                this.classList.remove('touching');
+            }, 50);
+        }, { passive: true });
+    });
+    
+    // Handle viewport height changes for mobile browsers
+    function setVH() {
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    }
+    
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(setVH, 100);
+    });
+    
+    // Enhanced keypad handling for mobile
+    const keypadButtons = document.querySelectorAll('.keypad-btn');
+    keypadButtons.forEach(button => {
+        // Add touch-optimized click handling
+        button.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Trigger the click after a small delay to show visual feedback
+            setTimeout(() => {
+                this.click();
+            }, 100);
+        });
+    });
+    
+    // Prevent accidental double taps
+    let lastTouchTime = 0;
+    document.addEventListener('touchend', function(e) {
+        const currentTime = Date.now();
+        if (currentTime - lastTouchTime < 300) {
+            e.preventDefault();
+        }
+        lastTouchTime = currentTime;
+    });
+    
+    // Improve scroll behavior on mobile
+    if (window.innerWidth <= 768) {
+        document.body.style.overscrollBehavior = 'contain';
+        
+        // Prevent pull-to-refresh on the terminal interface
+        document.addEventListener('touchmove', function(e) {
+            if (window.scrollY === 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    }
+    
+    // Add swipe gestures for clearing/processing
+    let touchStartX = null;
+    let touchStartY = null;
+    
+    document.addEventListener('touchstart', function(e) {
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+        if (!touchStartX || !touchStartY) return;
+        
+        const touch = e.touches[0];
+        const diffX = touchStartX - touch.clientX;
+        const diffY = touchStartY - touch.clientY;
+        
+        // Only handle horizontal swipes
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100) {
+            if (diffX > 0) {
+                // Swipe left - Clear
+                if (currentAmount > 0) {
+                    clearTransaction();
+                    showToast('Transaction cleared');
+                }
+            }
+            // Reset touch coordinates
+            touchStartX = null;
+            touchStartY = null;
+        }
+    });
+    
+    // Auto-focus enhancement for mobile
+    const amountInput = document.getElementById('amount-input');
+    if (amountInput && window.innerWidth > 768) {
+        amountInput.focus();
+    }
+    
+    console.log('Mobile enhancements initialized for POS terminal');
+}
+
+// Mobile toast notifications
+function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.pos-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `pos-toast alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'}`;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        border-radius: 25px;
+        padding: 12px 20px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideDown 0.3s ease-out;
+    `;
+    
+    // Add animation keyframes if not exists
+    if (!document.querySelector('#toast-animations')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animations';
+        style.textContent = `
+            @keyframes slideDown {
+                from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideDown 0.3s ease-out reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+</script>
+{% endblock %}

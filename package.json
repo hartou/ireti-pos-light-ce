@@ -1,0 +1,15 @@
+{
+  "name": "ireti-pos-light-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Project workspace package (reserved). Automated E2E deferred as technical debt.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@stripe/mcp": "^0.2.4",
+    "@playwright/test": "^1.40.0"
+  }
+}

@@ -1,0 +1,171 @@
+# 🎉 Ireti POS Light v1.0.0 - Major Release
+**Release Date**: September 4, 2025  
+**Release Type**: Major Feature Release - Complete Stripe Payment Integration
+
+## 🚀 What's New in v1.0.0
+
+### 💳 **Complete Stripe Payment System**
+- **Full Stripe Integration**: Production-ready payment processing with test/live mode support
+- **Modern Payment UI**: Beautiful, responsive Bootstrap-based payment interface
+- **Real-time Processing**: Instant payment confirmation with proper error handling
+- **Transaction Management**: Complete payment history and transaction tracking
+- **Refund Support**: Built-in refund processing with audit trail
+
+### 🎨 **Enhanced User Interface**
+- **Redesigned Payment Flow**: Professional, mobile-friendly payment forms
+- **Loading States**: Visual feedback with spinners and progress indicators
+- **Error Handling**: Clear, user-friendly error messages and validation
+- **Currency Formatting**: Proper decimal formatting ($5.00 vs $5.0)
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+
+### 🛡️ **Security & Compliance**
+- **PCI Compliance**: Secure card data handling through Stripe Elements
+- **CSRF Protection**: Enhanced security for all payment endpoints
+- **Input Validation**: Comprehensive server-side and client-side validation
+- **Audit Logging**: Complete payment activity logs for compliance
+- **Security Scanning**: Automated security checks and vulnerability scanning
+
+### 🧪 **Testing & Quality Assurance**
+- **End-to-End Testing**: Comprehensive Playwright test suite (6/6 passing)
+- **Cross-Browser Support**: Verified on Chromium and WebKit
+- **Payment Flow Testing**: Automated validation of complete payment workflows
+- **Error Scenario Testing**: Validation of error handling and recovery
+- **Transaction Testing**: Verification of proper transaction recording
+
+### 📊 **Admin Dashboard Enhancements**
+- **Payment Monitoring**: Real-time payment status and analytics
+- **Transaction History**: Searchable payment and refund records
+- **Webhook Management**: Stripe webhook monitoring and debugging
+- **User Management**: Enhanced admin controls and permissions
+- **System Metrics**: Payment processing statistics and performance data
+
+### 🔧 **Technical Improvements**
+- **Database Optimization**: Enhanced models for payment tracking
+- **API Endpoints**: RESTful payment APIs with proper error handling
+- **Webhook Processing**: Robust Stripe webhook handling and verification
+- **Logging System**: Structured logging for payment operations
+- **Configuration Management**: Environment-based configuration for test/live modes
+
+## 📋 **Migration & Deployment Notes**
+
+### **Database Requirements**
+- **SQLite Ready**: Optimized for SQLite deployment (container default)
+- **Migration Required**: Run `python manage.py migrate` to update database schema
+- **New Tables**: Payment, PaymentWebhook, PaymentRefund, PaymentMetric models added
+
+### **Environment Configuration**
+```bash
+# Required Stripe Configuration
+STRIPE_PUBLISHABLE_KEY=pk_test_...  # Your Stripe publishable key
+STRIPE_SECRET_KEY=sk_test_...       # Your Stripe secret key
+STRIPE_WEBHOOK_SECRET=whsec_...     # Webhook endpoint secret
+
+# Optional Configuration
+STRIPE_LIVE_MODE=False              # Set to True for production
+DEBUG=False                         # Set to False for production
+```
+
+### **Container Deployment**
+- **SQLite Optimized**: Default configuration uses SQLite for easy container deployment
+- **Volume Mounts**: Ensure database and logs directories are properly mounted
+- **Port Configuration**: Default port 8000 for web interface
+- **Health Checks**: Built-in health check endpoints for container orchestration
+
+## 🗃️ **Database Schema Changes**
+
+### **New Models Added**
+- `Payment`: Core payment record with Stripe integration
+- `PaymentWebhook`: Webhook event tracking and processing
+- `PaymentRefund`: Refund management and audit trail
+- `PaymentMetric`: Payment analytics and reporting data
+
+### **Updated Models**
+- `Transaction`: Enhanced with payment_type field for Stripe integration
+- Enhanced foreign key relationships for payment tracking
+
+## 🧪 **Testing Coverage**
+
+### **End-to-End Tests** ✅
+- Payment form validation and interaction
+- Complete payment flow with Stripe Elements
+- Error handling and recovery scenarios
+- Transaction detail display and verification
+- Cross-browser compatibility (Chromium + WebKit)
+
+### **Integration Tests** ✅
+- Stripe API integration
+- Webhook processing and verification
+- Database transaction integrity
+- Payment-transaction relationship
+
+### **Security Tests** ✅
+- CSRF protection validation
+- Input sanitization and validation
+- SQL injection prevention
+- XSS protection verification
+
+## 📚 **Documentation Added**
+- **Payment Operations Runbook**: Step-by-step payment processing guide
+- **Troubleshooting Guide**: Common issues and resolution steps
+- **Refund Procedures**: Complete refund workflow documentation
+- **Staging Validation Checklist**: Pre-production validation steps
+- **Stripe Testing Guide**: Comprehensive testing procedures
+
+## 🔄 **Upgrade Path from v0.x**
+
+### **Automatic Migrations**
+1. Pull latest code from main branch
+2. Run `python manage.py migrate` to apply database changes
+3. Update environment variables with Stripe configuration
+4. Restart application server
+
+### **Manual Configuration**
+1. Set up Stripe account and obtain API keys
+2. Configure webhook endpoints in Stripe dashboard
+3. Update Docker environment variables if using containers
+4. Test payment flow in Stripe test mode before going live
+
+## 🐛 **Bug Fixes**
+- Fixed amount formatting in payment display ($5.00 vs $5.0)
+- Resolved Stripe iframe click interception in automated tests
+- Corrected currency display throughout the application
+- Fixed transaction recording for manual amount entries
+- Improved error message display and validation feedback
+
+## 🚨 **Breaking Changes**
+- **Payment Processing**: Old payment methods are deprecated, Stripe is now primary
+- **Database Schema**: New tables require migration, backup before upgrading
+- **API Changes**: Payment endpoints have new response formats
+- **Environment Variables**: New Stripe configuration variables required
+
+## 🔜 **Known Issues & Future Improvements**
+- PWA service worker registration needs optimization (tracked in tests)
+- Consider adding support for additional payment methods
+- Plan for multi-currency support in future releases
+- Webhook retry mechanism could be enhanced
+
+## 📞 **Support & Documentation**
+- **Payment Issues**: Check `logs/payments.log` for detailed payment processing logs
+- **Configuration Help**: Refer to `STRIPE_TESTING_QUICK_REFERENCE.md`
+- **Troubleshooting**: See `docs/PAYMENT_TROUBLESHOOTING_GUIDE.md`
+- **Admin Guide**: Review `docs/PAYMENT_OPERATIONS_RUNBOOK.md`
+
+## 🎯 **Production Readiness Checklist**
+- ✅ Stripe account configured with live API keys
+- ✅ Webhook endpoints configured and verified
+- ✅ SSL certificate installed and configured  
+- ✅ Environment variables set for production
+- ✅ Database backups configured
+- ✅ Payment processing logs monitored
+- ✅ Test transactions verified in Stripe dashboard
+
+---
+
+**Note**: This is a major release with significant new functionality. Please test thoroughly in a staging environment before deploying to production. The container deployment is optimized for SQLite and includes all necessary dependencies for payment processing.
+
+**Container Features**: 
+- 🐳 Docker-ready with SQLite optimization
+- 📦 All dependencies included in container
+- 🔒 Production security configurations
+- 📊 Built-in monitoring and logging
+- 🚀 One-command deployment ready

@@ -1,0 +1,52 @@
+name: E2E Tests (Playwright)
+
+on:
+  push:
+    branches: [ pwa, main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright deps
+        run: |
+          npm ci || npm install
+          npx playwright install --with-deps
+
+      - name: Build and start services
+        run: |
+          docker compose up -d --build
+
+      - name: Wait for webapp to be ready
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:8000/ > /dev/null; then
+              echo "Webapp is up"; exit 0; fi; sleep 2; done; exit 1
+
+      - name: Run Playwright tests
+        env:
+          BASE_URL: http://127.0.0.1:8000
+          DJANGO_SUPERUSER_USERNAME: admin
+          DJANGO_SUPERUSER_PASSWORD: Admin123!
+        run: |
+          npx playwright test --reporter=list,html
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report

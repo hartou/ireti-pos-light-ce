@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment Details" %} - {{ payment.stripe_payment_intent_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-credit-card"></i>
+            {% trans "Payment Details" %}
+        </h1>
+        <div class="btn-group">
+            <a href="{% url 'payments:dashboard' %}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> {% trans "Back to Dashboard" %}
+            </a>
+            <button type="button" class="btn btn-sm btn-info" onclick="refreshPayment()">
+                <i class="fas fa-sync-alt"></i> {% trans "Refresh" %}
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Payment Information -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle"></i> {% trans "Payment Information" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">{% trans "Basic Details" %}</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">{% trans "Local ID" %}:</th>
+                                    <td><span class="badge badge-light">{{ payment.id }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Stripe ID" %}:</th>
+                                    <td><code>{{ payment.stripe_payment_intent_id }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Amount" %}:</th>
+                                    <td class="h5 text-success">${{ payment.amount }} {{ payment.currency }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Status" %}:</th>
+                                    <td>
+                                        <span class="badge badge-{% if payment.status == 'succeeded' %}success{% elif payment.status == 'requires_payment_method' %}warning{% elif payment.status == 'canceled' %}danger{% else %}info{% endif %} badge-pill">
+                                            <i class="fas fa-{% if payment.status == 'succeeded' %}check-circle{% elif payment.status == 'requires_payment_method' %}clock{% elif payment.status == 'canceled' %}times-circle{% else %}info-circle{% endif %}"></i>
+                                            {{ payment.status|capfirst }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">{% trans "Timestamps" %}</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">{% trans "Created" %}:</th>
+                                    <td>{{ payment.created_at|date:"M d, Y H:i:s" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Updated" %}:</th>
+                                    <td>{{ payment.updated_at|date:"M d, Y H:i:s" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Created By" %}:</th>
+                                    <td>
+                                        {% if payment.created_by %}
+                                            <i class="fas fa-user"></i> {{ payment.created_by.username }}
+                                        {% else %}
+                                            <i class="fas fa-user-secret"></i> {% trans "Anonymous" %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if payment.transaction %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-primary">{% trans "Linked POS Transaction" %}</h6>
+                            <div class="alert alert-info">
+                                <i class="fas fa-link"></i>
+                                {% trans "This payment is linked to POS Transaction" %}: 
+                                <strong>#{{ payment.transaction.id }}</strong>
+                                <small class="ml-2 text-muted">{{ payment.transaction.created_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if payment.metadata %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-primary">{% trans "Metadata" %}</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>{% trans "Key" %}</th>
+                                            <th>{% trans "Value" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, value in payment.metadata.items %}
+                                        <tr>
+                                            <td><strong>{{ key }}</strong></td>
+                                            <td>{{ value }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Panel -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-cogs"></i> {% trans "Actions" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if payment.status == 'succeeded' %}
+                    <button class="btn btn-warning btn-block mb-3" onclick="createRefund()">
+                        <i class="fas fa-undo"></i> {% trans "Create Refund" %}
+                    </button>
+                    {% endif %}
+                    
+                    <button class="btn btn-info btn-block mb-3" onclick="retrieveFromStripe()">
+                        <i class="fas fa-sync-alt"></i> {% trans "Sync with Stripe" %}
+                    </button>
+                    
+                    {% if payment.status == 'requires_payment_method' %}
+                    <button class="btn btn-primary btn-block mb-3" onclick="confirmPayment()">
+                        <i class="fas fa-check"></i> {% trans "Confirm Payment" %}
+                    </button>
+                    {% endif %}
+                    
+                    <div class="alert alert-light">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            {% trans "Payment actions will be processed through Stripe API" %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Token Generator -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-wifi"></i> {% trans "Terminal Connection" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-success btn-block" onclick="generateConnectionToken()">
+                        <i class="fas fa-key"></i> {% trans "Generate Connection Token" %}
+                    </button>
+                    <small class="text-muted">
+                        {% trans "For Terminal SDK integration" %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refunds Section -->
+    {% if refunds %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">
+                <i class="fas fa-undo"></i> {% trans "Refunds" %} ({{ refunds|length }})
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Refund ID" %}</th>
+                            <th>{% trans "Amount" %}</th>
+                            <th>{% trans "Reason" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Created" %}</th>
+                            <th>{% trans "Created By" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for refund in refunds %}
+                        <tr>
+                            <td><code>{{ refund.stripe_refund_id }}</code></td>
+                            <td>${{ refund.amount }} {{ refund.currency }}</td>
+                            <td>{{ refund.reason|capfirst }}</td>
+                            <td>
+                                <span class="badge badge-{% if refund.status == 'succeeded' %}success{% else %}warning{% endif %}">
+                                    {{ refund.status|capfirst }}
+                                </span>
+                            </td>
+                            <td>{{ refund.created_at|date:"M d, Y H:i:s" }}</td>
+                            <td>
+                                {% if refund.created_by %}
+                                    {{ refund.created_by.username }}
+                                {% else %}
+                                    {% trans "Anonymous" %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Refund Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Create Refund" %}</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {% trans "You are about to create a refund for" %}: <strong>${{ payment.amount }} {{ payment.currency }}</strong>
+                </div>
+                <form id="refundForm">
+                    <div class="form-group">
+                        <label>{% trans "Refund Amount" %} ($)</label>
+                        <input type="number" class="form-control" id="refundAmount" step="0.01" min="0.01" max="{{ payment.amount }}" placeholder="{% trans 'Leave blank for full refund' %}">
+                        <small class="form-text text-muted">{% trans "Maximum" %}: ${{ payment.amount }}</small>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Reason" %}</label>
+                        <select class="form-control" id="refundReason">
+                            <option value="requested_by_customer">{% trans "Requested by customer" %}</option>
+                            <option value="duplicate">{% trans "Duplicate payment" %}</option>
+                            <option value="fraudulent">{% trans "Fraudulent" %}</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-warning" onclick="submitRefund()">
+                    <i class="fas fa-undo"></i> {% trans "Create Refund" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const paymentIntentId = '{{ payment.stripe_payment_intent_id }}';
+
+// Create refund
+function createRefund() {
+    $('#refundModal').modal('show');
+}
+
+function submitRefund() {
+    const amount = $('#refundAmount').val();
+    const reason = $('#refundReason').val();
+    
+    const data = {
+        payment_intent_id: paymentIntentId,
+        reason: reason
+    };
+    
+    if (amount) {
+        data.amount = amount;
+    }
+    
+    $.ajax({
+        url: '{% url "payments:create_refund" %}',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                $('#refundModal').modal('hide');
+                alert('{% trans "Refund created successfully!" %}');
+                location.reload();
+            } else {
+                alert('{% trans "Error creating refund: " %}' + response.message);
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.message : 'Unknown error';
+            alert('{% trans "Error: " %}' + error);
+        }
+    });
+}
+
+// Retrieve payment from Stripe
+function retrieveFromStripe() {
+    $.ajax({
+        url: '{% url "payments:retrieve_payment_intent" payment.stripe_payment_intent_id %}',
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                alert('{% trans "Payment synced successfully!" %}');
+                location.reload();
+            } else {
+                alert('{% trans "Error syncing payment: " %}' + response.message);
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.message : 'Unknown error';
+            alert('{% trans "Error: " %}' + error);
+        }
+    });
+}
+
+// Confirm payment
+function confirmPayment() {
+    if (confirm('{% trans "Are you sure you want to confirm this payment?" %}')) {
+        $.ajax({
+            url: '{% url "payments:confirm_payment_intent" payment.stripe_payment_intent_id %}',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            data: JSON.stringify({}),
+            success: function(response) {
+                if (response.success) {
+                    alert('{% trans "Payment confirmed successfully!" %}');
+                    location.reload();
+                } else {
+                    alert('{% trans "Error confirming payment: " %}' + response.message);
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.message : 'Unknown error';
+                alert('{% trans "Error: " %}' + error);
+            }
+        });
+    }
+}
+
+// Generate connection token
+function generateConnectionToken() {
+    $.ajax({
+        url: '{% url "payments:create_connection_token" %}',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({}),
+        success: function(response) {
+            if (response.success) {
+                prompt('{% trans "Connection Token (copy this):" %}', response.connection_token);
+            } else {
+                alert('{% trans "Error creating connection token: " %}' + response.message);
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.message : 'Unknown error';
+            alert('{% trans "Error: " %}' + error);
+        }
+    });
+}
+
+// Refresh payment status
+function refreshPayment() {
+    retrieveFromStripe();
+}
+</script>
+{% endblock %}

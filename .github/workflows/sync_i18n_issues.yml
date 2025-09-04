@@ -1,0 +1,69 @@
+name: Sync i18n Issues
+
+on:
+  push:
+    paths:
+      - 'docs/I18N_USER_STORIES.md'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # daily at 03:00 UTC
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Close issues for completed stories
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = 'docs/I18N_USER_STORIES.md';
+            const content = fs.readFileSync(path, 'utf8');
+
+            // Extract table rows that start with | I18N-XXX |
+            const lines = content.split(/\r?\n/);
+            const rows = lines.filter(l => /^\|\s*I18N-\d+\s*\|/.test(l));
+            if (rows.length === 0) {
+              core.info('No I18N rows found. Nothing to do.');
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const headSha = (context.payload && context.payload.head_commit && context.payload.head_commit.id) || process.env.GITHUB_SHA || '';
+
+            for (const row of rows) {
+              // Split markdown table row into columns; ignore leading/trailing empties
+              const cols = row.split('|').map(c => c.trim());
+              // Expected columns: [ '', ID, Template, Path, Persona, User story, Acceptance, Status, '' ]
+              const id = cols[1];
+              const status = cols[cols.length - 2] || '';
+              if (!id || !/^I18N-\d{3}$/.test(id)) continue;
+
+              if (/^(completed|done)$/i.test(status)) {
+                const q = `repo:${owner}/${repo} is:issue in:title "${id}" state:open`;
+                const search = await github.rest.search.issuesAndPullRequests({ q, per_page: 100 });
+                if (!search.data.items.length) {
+                  core.info(`No open issue found for ${id}`);
+                  continue;
+                }
+                for (const issue of search.data.items) {
+                  const number = issue.number;
+                  const msg = `Closing automatically: status for ${id} marked Completed in docs/I18N_USER_STORIES.md\n\nCommit: ${headSha}`;
+                  await github.rest.issues.createComment({ owner, repo, issue_number: number, body: msg });
+                  await github.rest.issues.update({ owner, repo, issue_number: number, state: 'closed' });
+                  core.info(`Closed issue #${number} for ${id}`);
+                }
+              }
+            }
+
+      - name: Summary
+        run: echo "Sync complete. See job logs for details."

@@ -1,0 +1,338 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{% block title %}Online Retail POS{% endblock %}</title>
+
+    <!-- Custom fonts -->
+    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Styles -->
+    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+    <link href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.12.1/datatables.min.css"/>
+
+    <!-- PWA: Manifest & Theme -->
+    <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
+    <meta name="theme-color" content="#1c87c9">
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ireti POS">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/icons/icon-192x192.png' %}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{% static 'img/icons/icon-192x192.png' %}">
+    <link rel="apple-touch-icon" sizes="512x512" href="{% static 'img/icons/icon-512x512.png' %}">
+
+    <!-- Windows/MS Tile -->
+    <meta name="msapplication-TileColor" content="#1c87c9">
+    <meta name="msapplication-TileImage" content="{% static 'img/icons/icon-192x192.png' %}">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/icons/icon-192x192.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/icons/icon-192x192.png' %}">
+
+    <style>
+        * { box-sizing: border-box; }
+        .openBtn { display: flex; justify-content: left; }
+        .openButton {
+          border: none; border-radius: 5px; background-color: #1c87c9; color: white;
+          padding: 14px 20px; cursor: pointer; position: fixed;
+        }
+        .loginPopup { position: relative; text-align: center; width: 100%; }
+        .formPopup {
+          display: none; position: fixed; left: 50%; top: 20%; transform: translate(-50%, 10%);
+          border: 3px solid #999999; z-index: 9; width: 100%; max-width: 350px;
+        }
+        .formContainer { max-width: 350px; width:100%; padding: 20px; background-color: #fff; }
+        .formContainer input[type=text],
+        .formContainer input[type=password] {
+          width: 100%; padding: 15px; margin: 5px 0 20px 0; border: none; background: #eee;
+        }
+        .formContainer input[type=text]:focus,
+        .formContainer input[type=password]:focus { background-color: #ddd; outline: none; }
+
+        /* PWA-007: Network Status Styling */
+        #network-status { user-select: none; }
+        .network-offline { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .action-disabled { opacity: 0.6; pointer-events: none; cursor: not-allowed; }
+        .pulse { animation: pulse 2s infinite; }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <audio id="notification-audio" preload="auto" autoplay>
+        <source src="{% static 'note.mp3' %}" type="audio/mpeg">
+    </audio>
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+        {% block sidebar %}
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'home' %}">
+                <div class="sidebar-brand-icon"><i class="fas fa-store"></i></div>
+                <div class="sidebar-brand-text">{% trans "Online Retail POS System" %}</div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <!-- Dashboards -->
+            <li class="nav-item active" style="padding-top:20px;padding-bottom:20px">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fas fa-fw fa-desktop"></i>
+                    <span>{% trans "Dashboards" %}</span>
+                </a>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{% url 'dashboard_sales' %}"><i class="fas fa-fw fa-chart-line"></i> {% trans "Sales Dashboard" %}</a>
+                        <a class="collapse-item" href="{% url 'dashboard_department' %}"><i class="fas fa-fw fa-chart-bar"></i> {% trans "Department Dashboard" %}</a>
+                        <a class="collapse-item" href="{% url 'dashboard_products' %}"><i class="fas fa-fw fa-table"></i> {% trans "Products Dashboard" %}</a>
+                    </div>
+                </div>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">{% trans "Register" %}</div>
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'register' %}"><i class="fas fa-cash-register"></i><span>{% trans "Register" %}</span></a>
+                <a class="nav-link" href="{% url 'transactionView' %}"><i class="fas fa-list-alt"></i><span>{% trans "Transactions" %}</span></a>
+                <a class="nav-link" href="{% url 'retail_display' %}" target="_blank"><i class="far fa-window-maximize"></i><span>{% trans "Customer Screen" %}</span></a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">{% trans "Payments" %}</div>
+            <li class="nav-item active">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePayments" aria-expanded="true" aria-controls="collapsePayments">
+                    <i class="fas fa-credit-card"></i>
+                    <span>{% trans "Payment System" %}</span>
+                </a>
+                <div id="collapsePayments" class="collapse" aria-labelledby="headingPayments" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">{% trans "Processing:" %}</h6>
+                        <a class="collapse-item" href="{% url 'payments:payment_form' %}"><i class="fas fa-credit-card"></i> {% trans "Payment Form" %}</a>
+                        <a class="collapse-item" href="{% url 'payments:pos_terminal' %}"><i class="fas fa-terminal"></i> {% trans "POS Terminal" %}</a>
+                        <a class="collapse-item" href="{% url 'payments:payment_status' %}"><i class="fas fa-info-circle"></i> {% trans "Payment Status" %}</a>
+                        <div class="collapse-divider"></div>
+                        <h6 class="collapse-header">{% trans "Management:" %}</h6>
+                        <a class="collapse-item" href="{% url 'payments:payment_history' %}"><i class="fas fa-history"></i> {% trans "Payment History" %}</a>
+                        <a class="collapse-item" href="{% url 'payments:dashboard' %}"><i class="fas fa-chart-pie"></i> {% trans "Payment Dashboard" %}</a>
+                        <a class="collapse-item" href="{% url 'payments:webhook_dashboard' %}"><i class="fas fa-plug"></i> {% trans "Webhook Logs" %}</a>
+                    </div>
+                </div>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">{% trans "Other" %}</div>
+            <li class="nav-item active">
+                <a class="nav-link" href="{% url 'product_lookup_default' %}"><i class="fas fa-search"></i><span>{% trans "Price Lookup" %}</span></a>
+                <a class="nav-link" href="{% url 'inventory_add' %}"><i class="fas fa-dolly"></i><span>{% trans "Add Inventory" %}</span></a>
+            </li>
+            <hr class="sidebar-divider">
+            {% if user.is_staff %}
+            <div class="sidebar-heading">{% trans "Data Administration" %}</div>
+            <li class="nav-item active">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
+                    <i class="fas fa-laptop-house"></i>
+                    <span>{% trans "Administration" %}</span>
+                </a>
+                <div id="collapseAdmin" class="collapse" aria-labelledby="headingAdmin" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">{% trans "Data Management:" %}</h6>
+                        <a class="collapse-item" href="{% url 'admin_products' %}"><i class="fas fa-box"></i> {% trans "Products" %}</a>
+                        <a class="collapse-item" href="{% url 'admin_inventory' %}"><i class="fas fa-warehouse"></i> {% trans "Inventory" %}</a>
+                        <a class="collapse-item" href="{% url 'admin_users' %}"><i class="fas fa-users"></i> {% trans "Users" %}</a>
+                        <div class="collapse-divider"></div>
+                        <h6 class="collapse-header">{% trans "System:" %}</h6>
+                        <a class="collapse-item" href="{% url 'admin_transactions' %}"><i class="fas fa-receipt"></i> {% trans "Transactions" %}</a>
+                        <a class="collapse-item" href="{% url 'admin_system' %}"><i class="fas fa-server"></i> {% trans "System Settings" %}</a>
+                        <div class="collapse-divider"></div>
+                        <a class="collapse-item" href="{% url 'admin:index' %}" target="_blank"><i class="fas fa-external-link-alt"></i> {% trans "Django Admin" %}</a>
+                    </div>
+                </div>
+            </li>
+            <hr class="sidebar-divider">
+            {% endif %}
+        </ul>
+        {% endblock %}
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                {% block navbar %}
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    {% block nav-item %}{% endblock %}
+
+                    <ul class="navbar-nav ml-auto">
+                        <!-- Network Status Indicator (single source of truth) -->
+                        <li class="nav-item mr-3">
+                            <div id="network-status" class="d-flex align-items-center">
+                                <span id="network-indicator" class="badge badge-success mr-2" title="{% trans 'Network Status' %}">
+                                    <i class="fas fa-wifi"></i> <span id="network-text">{% trans "Online" %}</span>
+                                </span>
+                                <small id="network-message" class="text-muted d-none"></small>
+                            </div>
+                        </li>
+
+                        <!-- SW Update Notification (single button) -->
+                        <li class="nav-item mr-3">
+                            <button id="sw-update-btn"
+                                    class="btn btn-info btn-sm"
+                                    onclick="handleUpdateClick()"
+                                    style="display:none;"
+                                    title="{% trans 'Update Available' %}">
+                                <i class="fas fa-sync-alt"></i> {% trans "Update Available" %}
+                            </button>
+                        </li>
+
+                        <!-- PWA Install Button -->
+                        <li class="nav-item mr-3">
+                            <button id="pwa-install-btn"
+                                    class="btn btn-primary btn-sm"
+                                    onclick="handleInstallClick()"
+                                    style="display:none;"
+                                    title="{% trans 'Install POS App' %}">
+                                <i class="fas fa-download"></i> {% trans "Install App" %}
+                            </button>
+                        </li>
+
+                        <li class="nav-item mr-3">
+                            <form action="{% url 'set_language' %}" method="post" class="form-inline">
+                                {% csrf_token %}
+                                <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                <select name="language" class="form-control form-control-sm" onchange="this.form.submit()">
+                                    {% get_current_language as LANGUAGE_CODE %}
+                                    {% get_available_languages as LANGUAGES %}
+                                    {% for lang_code, lang_name in LANGUAGES %}
+                                        <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </li>
+
+                        {% if user.is_authenticated %}
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-800 md-primary">{% trans "Hello," %} {{ user.first_name }} {{ user.last_name }}</span>
+                                <i class="fas fa-user-alt" style="color:rgb(92, 92, 244);padding-left:5px"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in p-1"
+                                 aria-labelledby="userDropdown" style="background:#e0e0e0">
+                                <hr class="m-1">
+                                <a class="h6 dropdown-item p-3 text-dark m-0" href="{% url 'change_password' %}" style="min-width:200px">
+                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    {% trans "Change Password" %}
+                                </a>
+                                <hr class="m-2">
+                                <a class="h6 dropdown-item p-3 text-danger m-0" href="{% url 'user_logout' %}">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-danger"></i>
+                                    {% trans "Logout" %}
+                                </a>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'user_login' %}">
+                                <i class="fas fa-sign-in-alt"></i> {% trans "Login" %}
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endblock %}
+
+                {% block content %}{% endblock %}
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+    <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+    <!-- Service Worker Registration and PWA handlers -->
+    <script>
+    (function() {
+        // Network status indicator
+        function updateNetworkUI() {
+            var online = navigator.onLine;
+            var indicator = document.getElementById('network-indicator');
+            var text = document.getElementById('network-text');
+            if (!indicator || !text) return;
+            if (online) {
+                indicator.classList.remove('badge-danger', 'network-offline');
+                indicator.classList.add('badge-success');
+                text.textContent = "{% trans 'Online' %}";
+            } else {
+                indicator.classList.remove('badge-success');
+                indicator.classList.add('badge-danger', 'network-offline');
+                text.textContent = "{% trans 'Offline' %}";
+            }
+        }
+        window.addEventListener('online', updateNetworkUI);
+        window.addEventListener('offline', updateNetworkUI);
+        updateNetworkUI();
+
+        // PWA Install flow
+        let deferredPrompt;
+        const installBtn = document.getElementById('pwa-install-btn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBtn) installBtn.style.display = 'inline-block';
+        });
+        window.handleInstallClick = async function() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (installBtn) installBtn.style.display = 'none';
+        }
+
+        // Service worker register + update
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("{% static 'js/sw.js' %}").then(reg => {
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    if (!newWorker) return;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            const updateBtn = document.getElementById('sw-update-btn');
+                            if (updateBtn) updateBtn.style.display = 'inline-block';
+                            window.handleUpdateClick = function() {
+                                if (reg.waiting) {
+                                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            }
+                            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                window.location.reload();
+                            });
+                        }
+                    });
+                });
+            }).catch(err => {
+                console.warn('SW registration failed', err);
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

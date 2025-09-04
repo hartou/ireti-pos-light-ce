@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment Dashboard" %} - Ireti POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-credit-card"></i>
+            {% trans "Payment Dashboard" %}
+        </h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-primary" onclick="createTestPayment()">
+                <i class="fas fa-plus"></i> {% trans "Test Payment" %}
+            </button>
+            <button type="button" class="btn btn-sm btn-info" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt"></i> {% trans "Refresh" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Payment Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans "Today's Payments" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="today-payments">
+                                {{ recent_payments|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans "Successful Payments" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="successful-payments">
+                                {% for payment in recent_payments %}{% if payment.status == "succeeded" %}1{% endif %}{% empty %}0{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans "Pending Payments" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pending-payments">
+                                {% for payment in recent_payments %}{% if payment.status != "succeeded" and payment.status != "canceled" %}1{% endif %}{% empty %}0{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans "Refunds Issued" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ recent_refunds|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-undo fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> {% trans "Recent Payments" %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="paymentsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Amount" %}</th>
+                            <th>{% trans "Currency" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Created" %}</th>
+                            <th>{% trans "Stripe ID" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in recent_payments %}
+                        <tr>
+                            <td>{{ payment.id }}</td>
+                            <td>${{ payment.amount }}</td>
+                            <td>{{ payment.currency }}</td>
+                            <td>
+                                <span class="badge badge-{% if payment.status == 'succeeded' %}success{% elif payment.status == 'requires_payment_method' %}warning{% elif payment.status == 'canceled' %}danger{% else %}info{% endif %}">
+                                    {{ payment.status|capfirst }}
+                                </span>
+                            </td>
+                            <td>{{ payment.created_at|date:"M d, Y H:i" }}</td>
+                            <td><code>{{ payment.stripe_payment_intent_id }}</code></td>
+                            <td>
+                                <a href="{% url 'payments:detail' payment.id %}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i> {% trans "View" %}
+                                </a>
+                                {% if payment.status == 'succeeded' %}
+                                <button class="btn btn-sm btn-outline-warning" onclick="createRefund('{{ payment.stripe_payment_intent_id }}')">
+                                    <i class="fas fa-undo"></i> {% trans "Refund" %}
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="fas fa-info-circle"></i> {% trans "No payments found" %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Refunds -->
+    {% if recent_refunds %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">
+                <i class="fas fa-undo"></i> {% trans "Recent Refunds" %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Refund ID" %}</th>
+                            <th>{% trans "Amount" %}</th>
+                            <th>{% trans "Reason" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Created" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for refund in recent_refunds %}
+                        <tr>
+                            <td><code>{{ refund.stripe_refund_id }}</code></td>
+                            <td>${{ refund.amount }}</td>
+                            <td>{{ refund.reason|capfirst }}</td>
+                            <td>
+                                <span class="badge badge-{% if refund.status == 'succeeded' %}success{% else %}warning{% endif %}">
+                                    {{ refund.status|capfirst }}
+                                </span>
+                            </td>
+                            <td>{{ refund.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="testPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Create Test Payment" %}</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="testPaymentForm">
+                    <div class="form-group">
+                        <label>{% trans "Amount" %} ($)</label>
+                        <input type="number" class="form-control" id="testAmount" step="0.01" min="0.01" value="10.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Currency" %}</label>
+                        <select class="form-control" id="testCurrency">
+                            <option value="usd">USD</option>
+                            <option value="eur">EUR</option>
+                            <option value="gbp">GBP</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" onclick="submitTestPayment()">{% trans "Create Payment" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Create Refund" %}</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="refundForm">
+                    <input type="hidden" id="refundPaymentIntentId">
+                    <div class="form-group">
+                        <label>{% trans "Refund Amount" %} ($)</label>
+                        <input type="number" class="form-control" id="refundAmount" step="0.01" min="0.01" placeholder="{% trans 'Leave blank for full refund' %}">
+                        <small class="form-text text-muted">{% trans "Leave empty to refund the full amount" %}</small>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Reason" %}</label>
+                        <select class="form-control" id="refundReason">
+                            <option value="requested_by_customer">{% trans "Requested by customer" %}</option>
+                            <option value="duplicate">{% trans "Duplicate payment" %}</option>
+                            <option value="fraudulent">{% trans "Fraudulent" %}</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-warning" onclick="submitRefund()">{% trans "Create Refund" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize DataTables
+$(document).ready(function() {
+    $('#paymentsTable').DataTable({
+        "order": [[ 4, "desc" ]], // Sort by created date descending
+        "pageLength": 25
+    });
+});
+
+// Create test payment
+function createTestPayment() {
+    $('#testPaymentModal').modal('show');
+}
+
+function submitTestPayment() {
+    const amount = $('#testAmount').val();
+    const currency = $('#testCurrency').val();
+    
+    if (!amount || amount <= 0) {
+        alert('{% trans "Please enter a valid amount" %}');
+        return;
+    }
+    
+    $.ajax({
+        url: '{% url "payments:create_payment_intent" %}',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+            amount: amount,
+            currency: currency,
+            metadata: {
+                test_payment: 'true'
+            }
+        }),
+        success: function(response) {
+            if (response.success) {
+                $('#testPaymentModal').modal('hide');
+                alert('{% trans "Test payment created successfully!" %}');
+                location.reload();
+            } else {
+                alert('{% trans "Error creating payment: " %}' + response.message);
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.message : 'Unknown error';
+            alert('{% trans "Error: " %}' + error);
+        }
+    });
+}
+
+// Create refund
+function createRefund(paymentIntentId) {
+    $('#refundPaymentIntentId').val(paymentIntentId);
+    $('#refundModal').modal('show');
+}
+
+function submitRefund() {
+    const paymentIntentId = $('#refundPaymentIntentId').val();
+    const amount = $('#refundAmount').val();
+    const reason = $('#refundReason').val();
+    
+    const data = {
+        payment_intent_id: paymentIntentId,
+        reason: reason
+    };
+    
+    if (amount) {
+        data.amount = amount;
+    }
+    
+    $.ajax({
+        url: '{% url "payments:create_refund" %}',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                $('#refundModal').modal('hide');
+                alert('{% trans "Refund created successfully!" %}');
+                location.reload();
+            } else {
+                alert('{% trans "Error creating refund: " %}' + response.message);
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.message : 'Unknown error';
+            alert('{% trans "Error: " %}' + error);
+        }
+    });
+}
+
+// Refresh dashboard
+function refreshDashboard() {
+    location.reload();
+}
+</script>
+{% endblock %}

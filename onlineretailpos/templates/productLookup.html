@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}
+{% trans "Product Information" %} | Online Retail POS
+{% endblock %}
+
+{% block nav-item %}
+<div class="mb-0 font-weight-bold  h5 text-gray-500 text-uppercase p-3 "> {% trans "Product Information" %} </div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Product Search Form -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body text-center p-4">
+                    <form class="form" action="{{ request.get_full_path }}" method="POST">
+                        {% csrf_token %}
+                        <div class="row justify-content-center">
+                            {% for field in form %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label sr-only">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button class="btn btn-lg btn-primary mt-3" style="width:60%;" id="submit-barcode" type="submit">
+                            {% trans "Submit" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Alert -->
+    {% if notFound %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>{% trans "NO PRODUCT FOUND" %}</strong>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Product Information Display -->
+    {% if obj %}
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-2 font-weight-bold text-primary h3">
+                        {% blocktrans with barcode=obj.get_fields.0.1 %}Product Information - {{ barcode }}{% endblocktrans %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Price Display -->
+                    <div class="row mb-4">
+                        <div class="col-12 text-right">
+                            <h2 class="text-danger font-weight-bold">
+                                {% trans "Price" %}: {{ obj.get_fields.2.1 }}
+                            </h2>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Details Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <tbody>
+                                {% for name, value in obj.get_fields %}
+                                <tr>
+                                    <td class="font-weight-bold text-gray-700" style="width: 35%;">{{ name }}</td>
+                                    <td class="text-gray-900">{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .activity-item {
+        border-left: 4px solid #e3e6f0;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .activity-item.recent {
+        border-left-color: #4e73df;
+    }
+    
+    .system-health {
+        display: flex;
+        align-items: center;
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .status-good { background-color: #1cc88a; }
+    .status-warning { background-color: #f6c23e; }
+    .status-danger { background-color: #e74a3b; }
+</style>
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="{{ page_icon }}"></i> {{ page_title }}
+        </h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'admin:index' %}" class="btn btn-secondary btn-sm" target="_blank">
+                <i class="fas fa-external-link-alt"></i> {% trans "Django Admin" %}
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-arrow-left"></i> {% trans "Back to POS" %}
+            </a>
+        </div>
+    </div>
+    
+    <!-- Breadcrumb Navigation -->
+    {% if breadcrumbs %}
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            {% for crumb in breadcrumbs %}
+                <li class="breadcrumb-item {% if crumb.active %}active{% endif %}">
+                    {% if crumb.active %}
+                        <i class="{{ crumb.icon }}"></i> {{ crumb.label }}
+                    {% else %}
+                        <a href="{{ crumb.url }}">
+                            <i class="{{ crumb.icon }}"></i> {{ crumb.label }}
+                        </a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+    {% endif %}
+
+    <!-- Statistics Cards Row -->
+    <div class="row mb-4">
+        <!-- Products Stats -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans "Total Products" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.products.total }}
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                <span class="text-success">{{ stats.products.active }}</span> {% trans "active" %} •
+                                <span class="text-secondary">{{ stats.products.inactive }}</span> {% trans "inactive" %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Stats -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans "Inventory Items" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.inventory.total }}
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                <span class="text-warning">{{ stats.inventory.low_stock }}</span> {% trans "low stock" %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-warehouse fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Stats -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans "Total Transactions" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.transactions.total }}
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                <span class="text-info">{{ stats.transactions.week }}</span> {% trans "this week" %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Stats -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {% trans "System Users" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.users.total }}
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                <span class="text-warning">{{ stats.users.staff }}</span> {% trans "staff" %} •
+                                <span class="text-secondary">{{ stats.users.regular }}</span> {% trans "regular" %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Row -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-tasks"></i> {% trans "Quick Actions" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_products' %}" class="btn btn-primary btn-icon-split w-100">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-box"></i>
+                                </span>
+                                <span class="text">{% trans "Manage Products" %}</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_inventory' %}" class="btn btn-success btn-icon-split w-100">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-warehouse"></i>
+                                </span>
+                                <span class="text">{% trans "Check Inventory" %}</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_users' %}" class="btn btn-warning btn-icon-split w-100">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-users"></i>
+                                </span>
+                                <span class="text">{% trans "Manage Users" %}</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_transactions' %}" class="btn btn-info btn-icon-split w-100">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-receipt"></i>
+                                </span>
+                                <span class="text">{% trans "View Transactions" %}</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-heart"></i> {% trans "System Health" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="system-health">
+                            <span class="status-indicator status-good"></span>
+                            <span>{% trans "Database Connection" %}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="system-health">
+                            <span class="status-indicator {% if stats.inventory.low_stock > 0 %}status-warning{% else %}status-good{% endif %}"></span>
+                            <span>{% trans "Inventory Levels" %}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="system-health">
+                            <span class="status-indicator status-good"></span>
+                            <span>{% trans "Payment Processing" %}</span>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{% url 'admin_system' %}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-cog"></i> {% trans "System Settings" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Row -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-clock"></i> {% trans "Recent Transactions" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for transaction in recent_activity.transactions %}
+                    <div class="activity-item recent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>#{{ transaction.transactionNo }}</strong>
+                                <span class="text-muted">{{ transaction.transactionType|capfirst }}</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-weight-bold text-success">${{ transaction.total }}</div>
+                                <small class="text-muted">{{ transaction.timestamp|timesince }} {% trans "ago" %}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-info-circle fa-2x mb-2"></i>
+                        <p>{% trans "No recent transactions" %}</p>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'admin_transactions' %}" class="btn btn-sm btn-primary">
+                            {% trans "View All Transactions" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-plus"></i> {% trans "Recent Products" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for product in recent_activity.products %}
+                    <div class="activity-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ product.name }}</strong>
+                                {% if product.barcode %}
+                                <span class="text-muted">({{ product.barcode }})</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-right">
+                                <div class="font-weight-bold text-info">${{ product.price }}</div>
+                                <small class="text-muted">{{ product.department }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-info-circle fa-2x mb-2"></i>
+                        <p>{% trans "No products found" %}</p>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'admin_products' %}" class="btn btn-sm btn-primary">
+                            {% trans "View All Products" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh dashboard data every 30 seconds
+setInterval(function() {
+    // You could implement AJAX refresh here
+    console.log('Dashboard auto-refresh (placeholder)');
+}, 30000);
+
+// Initialize tooltips
+$(document).ready(function() {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{{ block.super }}
+{% endblock %}

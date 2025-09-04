@@ -1,0 +1,127 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block page_title %}{% trans "User Management" %}{% endblock %}
+
+{% block admin_content %}
+    <div class="container-fluid">
+        
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users"></i> {% trans "User Management" %}
+            </h1>
+            <div class="btn-group">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="fas fa-plus"></i> {% trans "Add User" %}
+                </button>
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> {% trans "Back to Admin" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list"></i> {% trans "System Users" %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if users_list %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Username" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "First Name" %}</th>
+                                <th>{% trans "Last Name" %}</th>
+                                <th>{% trans "Staff Status" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Last Login" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users_list %}
+                            <tr>
+                                <td><strong>{{ user.username }}</strong></td>
+                                <td>{{ user.email|default:"—" }}</td>
+                                <td>{{ user.first_name|default:"—" }}</td>
+                                <td>{{ user.last_name|default:"—" }}</td>
+                                <td>
+                                    {% if user.is_staff %}
+                                        <span class="badge badge-success">{% trans "Staff" %}</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">{% trans "Regular" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge badge-success">{% trans "Active" %}</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{% trans "Inactive" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">{% trans "Never" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                onclick="editUser('{{ user.id }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if user.is_active %}
+                                        <button type="button" class="btn btn-sm btn-warning" 
+                                                onclick="deactivateUser('{{ user.id }}')">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                onclick="activateUser('{{ user.id }}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                    <p class="text-gray-500">{% trans "No users found." %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function editUser(userId) {
+            alert('{% trans "User editing functionality will be implemented in a future update." %}');
+        }
+        
+        function deactivateUser(userId) {
+            if (confirm('{% trans "Are you sure you want to deactivate this user?" %}')) {
+                alert('{% trans "User deactivation functionality will be implemented in a future update." %}');
+            }
+        }
+        
+        function activateUser(userId) {
+            if (confirm('{% trans "Are you sure you want to activate this user?" %}')) {
+                alert('{% trans "User activation functionality will be implemented in a future update." %}');
+            }
+        }
+    </script>
+{% endblock %}

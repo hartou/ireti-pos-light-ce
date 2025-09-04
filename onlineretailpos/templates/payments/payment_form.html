@@ -1,0 +1,843 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Processing - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+    .payment-form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .payment-method-tabs {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .payment-method-tabs .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .payment-method-tabs .nav-link.active {
+        color: #007bff;
+        border-bottom-color: #007bff;
+        background: none;
+    }
+    
+    .stripe-element {
+        padding: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: white;
+        margin-bottom: 15px;
+    }
+    
+    .stripe-element--focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .stripe-element--invalid {
+        border-color: #dc3545;
+    }
+    
+    .card-errors {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    .payment-summary {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .amount-display {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #28a745;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .processing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .processing-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        max-width: 400px;
+    }
+    
+    .spinner-border-xl {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    .payment-success {
+        color: #28a745;
+    }
+    
+    .payment-error {
+        color: #dc3545;
+    }
+    
+    .quick-amounts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .quick-amount-btn {
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        background: white;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .quick-amount-btn:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+    
+    .quick-amount-btn.selected {
+        border-color: #007bff;
+        background: #e3f2fd;
+        color: #007bff;
+    }
+    
+    /* Mobile-First Responsive Enhancements */
+    @media (max-width: 992px) {
+        .payment-form-container {
+            padding: 15px;
+            margin: 0;
+        }
+        
+        .quick-amounts {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .quick-amount-btn {
+            padding: 16px 8px;
+            font-size: 0.9rem;
+            touch-action: manipulation;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .payment-form-container {
+            padding: 10px;
+        }
+        
+        .quick-amounts {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .quick-amount-btn {
+            padding: 18px 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-width: 2px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .amount-display {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        .payment-summary {
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stripe-element {
+            padding: 16px;
+            font-size: 16px; /* Prevents zoom on iOS */
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            min-height: 50px;
+            font-size: 1.1rem;
+            touch-action: manipulation;
+        }
+        
+        .processing-content {
+            margin: 20px;
+            padding: 20px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .payment-form-container {
+            padding: 5px;
+        }
+        
+        .quick-amounts {
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .quick-amount-btn {
+            min-height: 70px;
+            padding: 20px 15px;
+            font-size: 1.1rem;
+        }
+        
+        .amount-display {
+            font-size: 1.6rem;
+        }
+        
+        .payment-method-tabs .nav-link {
+            padding: 12px 16px;
+            font-size: 0.95rem;
+        }
+        
+        .btn-lg {
+            padding: 18px 24px;
+            font-size: 1.2rem;
+        }
+    }
+    
+    /* Touch-friendly enhancements */
+    .quick-amount-btn:active,
+    .touching {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+    }
+    
+    .btn:active,
+    .btn.touching {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+    }
+    
+    /* Improved focus states for accessibility */
+    @media (hover: none) and (pointer: coarse) {
+        .quick-amount-btn:hover {
+            border-color: #dee2e6;
+            background: white;
+        }
+        
+        .quick-amount-btn:focus,
+        .quick-amount-btn:active {
+            border-color: #007bff;
+            background: #e3f2fd;
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+    }
+    
+    /* Mobile viewport height fix */
+    @media (max-width: 768px) {
+        .processing-overlay {
+            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+        }
+    }
+    
+    /* Smooth animations */
+    .quick-amount-btn,
+    .btn {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Prevent text selection on touch elements */
+    .quick-amount-btn,
+    .btn,
+    .keypad-btn {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="payment-form-container">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-credit-card text-primary"></i> Payment Processing</h2>
+            <a href="{% url 'payments:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>                <!-- Payment Summary -->
+                <div class="payment-summary">
+                    <div class="amount-display" id="amount-display">$0.00</div>
+                    
+                    <!-- Quick Amount Buttons -->
+                    <div class="quick-amounts">
+                        <button type="button" class="quick-amount-btn" data-amount="5.00">$5.00</button>
+                        <button type="button" class="quick-amount-btn" data-amount="10.00">$10.00</button>
+                        <button type="button" class="quick-amount-btn" data-amount="20.00">$20.00</button>
+                        <button type="button" class="quick-amount-btn" data-amount="50.00">$50.00</button>
+                        <button type="button" class="quick-amount-btn" data-amount="100.00">$100.00</button>
+                        <button type="button" class="quick-amount-btn" data-amount="custom">Custom</button>
+                    </div>
+                    
+                    <!-- Custom Amount Input -->
+                    <div class="mb-3">
+                        <label for="custom-amount" class="form-label">Enter Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="custom-amount" 
+                                   placeholder="0.00" 
+                                   step="0.01" 
+                                   min="0.50" 
+                                   max="999999.99">
+                        </div>
+                        <div class="form-text">Minimum amount: $0.50</div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs payment-method-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" 
+                                        id="card-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#card-payment" 
+                                        type="button" 
+                                        role="tab">
+                                    <i class="fas fa-credit-card"></i> Card Payment
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" 
+                                        id="terminal-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#terminal-payment" 
+                                        type="button" 
+                                        role="tab">
+                                    <i class="fas fa-tablet-alt"></i> Terminal Reader
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- Card Payment -->
+                            <div class="tab-pane fade show active" id="card-payment" role="tabpanel">
+                                <form id="payment-form">
+                                    {% csrf_token %}
+                                    
+                                    <!-- Card Element -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Card Details</label>
+                                        <div id="card-element" class="stripe-element">
+                                            <!-- Stripe Elements will create form elements here -->
+                                        </div>
+                                        <div id="card-errors" class="card-errors" role="alert"></div>
+                                    </div>
+
+                                    <!-- Customer Information -->
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="customer-name" class="form-label">Customer Name</label>
+                                            <input type="text" class="form-control" id="customer-name" placeholder="John Doe">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="customer-email" class="form-label">Email (Optional)</label>
+                                            <input type="email" class="form-control" id="customer-email" placeholder="customer@example.com">
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Metadata -->
+                                    <div class="mb-3">
+                                        <label for="payment-description" class="form-label">Description (Optional)</label>
+                                        <input type="text" class="form-control" id="payment-description" placeholder="Order description">
+                                    </div>
+
+                                    <button type="submit" id="submit-payment" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-lock"></i> Process Payment
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Terminal Payment -->
+                            <div class="tab-pane fade" id="terminal-payment" role="tabpanel">
+                                <div class="text-center py-4">
+                                    <div class="mb-4">
+                                        <i class="fas fa-tablet-alt fa-4x text-muted"></i>
+                                    </div>
+                                    <h5>Terminal Reader Payment</h5>
+                                    <p class="text-muted">Process payments using connected terminal readers</p>
+                                    
+                                    <div id="terminal-status" class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Checking terminal availability...
+                                    </div>
+                                    
+                                    <button type="button" id="process-terminal-payment" class="btn btn-success btn-lg" disabled>
+                                        <i class="fas fa-credit-card"></i> Process Terminal Payment
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-history"></i> Recent Transactions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-transactions">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin"></i> Loading recent transactions...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Overlay -->
+<div id="processing-overlay" class="processing-overlay" style="display: none;">
+    <div class="processing-content">
+        <div id="processing-spinner" class="mb-3">
+            <div class="spinner-border spinner-border-xl text-primary" role="status">
+                <span class="visually-hidden">Processing...</span>
+            </div>
+        </div>
+        <h5 id="processing-title">Processing Payment...</h5>
+        <p id="processing-message" class="text-muted">Please wait while we process your payment.</p>
+        <div id="processing-progress" class="progress mt-3" style="display: none;">
+            <div class="progress-bar" role="progressbar"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Stripe Configuration
+const stripe = Stripe('{{ stripe_publishable_key }}');
+const elements = stripe.elements({
+    appearance: {
+        theme: 'stripe',
+        variables: {
+            colorPrimary: '#007bff',
+        }
+    }
+});
+
+// Payment Form Variables
+let currentAmount = 0;
+let paymentIntent = null;
+let cardElement = null;
+
+// Initialize Stripe Elements
+function initializeStripeElements() {
+    cardElement = elements.create('card', {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#424770',
+                '::placeholder': {
+                    color: '#aab7c4',
+                },
+            },
+            invalid: {
+                color: '#9e2146',
+            },
+        },
+    });
+    
+    cardElement.mount('#card-element');
+    
+    // Handle real-time validation errors from the card Element
+    cardElement.addEventListener('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+}
+
+// Amount Management
+function updateAmountDisplay(amount) {
+    currentAmount = parseFloat(amount) || 0;
+    document.getElementById('amount-display').textContent = `$${currentAmount.toFixed(2)}`;
+    
+    // Enable/disable payment buttons based on amount
+    const submitBtn = document.getElementById('submit-payment');
+    const terminalBtn = document.getElementById('process-terminal-payment');
+    
+    if (currentAmount >= 0.50) {
+        submitBtn.disabled = false;
+        if (terminalBtn && !terminalBtn.disabled) {
+            terminalBtn.disabled = false;
+        }
+    } else {
+        submitBtn.disabled = true;
+        if (terminalBtn) {
+            terminalBtn.disabled = true;
+        }
+    }
+}
+
+// Quick Amount Buttons
+function setupQuickAmountButtons() {
+    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('selected'));
+            
+            const amount = this.dataset.amount;
+            if (amount === 'custom') {
+                this.classList.add('selected');
+                document.getElementById('custom-amount').focus();
+            } else {
+                this.classList.add('selected');
+                document.getElementById('custom-amount').value = amount;
+                updateAmountDisplay(amount);
+            }
+        });
+    });
+    
+    // Custom amount input
+    const customAmountInput = document.getElementById('custom-amount');
+    customAmountInput.addEventListener('input', function() {
+        // Remove selection from quick amount buttons
+        document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('selected'));
+        
+        const customBtn = document.querySelector('[data-amount="custom"]');
+        if (this.value) {
+            customBtn.classList.add('selected');
+        }
+        
+        updateAmountDisplay(this.value);
+    });
+}
+
+// Payment Processing
+async function createPaymentIntent() {
+    if (currentAmount < 0.50) {
+        throw new Error('Amount must be at least $0.50');
+    }
+    
+    const response = await fetch('/payments/api/intent/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            amount: Math.round(currentAmount * 100), // Convert to cents
+            currency: 'usd',
+            description: document.getElementById('payment-description').value || 'POS Payment',
+            metadata: {
+                customer_name: document.getElementById('customer-name').value || 'Anonymous',
+                customer_email: document.getElementById('customer-email').value || '',
+                source: 'pos_ui'
+            }
+        })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+        throw new Error(result.message || 'Failed to create payment intent');
+    }
+    
+    return result.payment_intent;
+}
+
+async function processCardPayment() {
+    try {
+        showProcessingOverlay('Creating payment...', 'Please wait while we set up your payment.');
+        
+        // Create payment intent
+        paymentIntent = await createPaymentIntent();
+        
+        showProcessingOverlay('Processing payment...', 'Please do not close this window.');
+        
+        // Confirm payment with card
+        const {error, paymentIntent: confirmedPayment} = await stripe.confirmCardPayment(
+            paymentIntent.client_secret,
+            {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: document.getElementById('customer-name').value || 'Anonymous Customer',
+                        email: document.getElementById('customer-email').value || null,
+                    }
+                }
+            }
+        );
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        if (confirmedPayment.status === 'succeeded') {
+            showProcessingOverlay('Payment successful!', 'Your payment has been processed successfully.', 'success');
+            setTimeout(() => {
+                handlePaymentSuccess(confirmedPayment);
+            }, 2000);
+        } else {
+            throw new Error(`Payment ${confirmedPayment.status}`);
+        }
+        
+    } catch (error) {
+        hideProcessingOverlay();
+        showAlert('Payment Error', error.message, 'danger');
+    }
+}
+
+function showProcessingOverlay(title, message, type = 'processing') {
+    const overlay = document.getElementById('processing-overlay');
+    const spinner = document.getElementById('processing-spinner');
+    const titleEl = document.getElementById('processing-title');
+    const messageEl = document.getElementById('processing-message');
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    if (type === 'success') {
+        spinner.innerHTML = '<i class="fas fa-check-circle fa-3x text-success"></i>';
+    } else {
+        spinner.innerHTML = '<div class="spinner-border spinner-border-xl text-primary" role="status"><span class="visually-hidden">Processing...</span></div>';
+    }
+    
+    overlay.style.display = 'flex';
+}
+
+function hideProcessingOverlay() {
+    document.getElementById('processing-overlay').style.display = 'none';
+}
+
+function handlePaymentSuccess(payment) {
+    hideProcessingOverlay();
+    
+    // Show success message
+    showAlert('Payment Successful!', 
+        `Payment of $${(payment.amount / 100).toFixed(2)} has been processed successfully.`, 
+        'success');
+    
+    // Reset form
+    resetPaymentForm();
+    
+    // Refresh recent transactions
+    loadRecentTransactions();
+    
+    // Optional: redirect to receipt page
+    // window.location.href = `/payments/receipt/${payment.id}/`;
+}
+
+function resetPaymentForm() {
+    // Reset amount
+    currentAmount = 0;
+    updateAmountDisplay(0);
+    document.getElementById('custom-amount').value = '';
+    
+    // Clear form fields
+    document.getElementById('customer-name').value = '';
+    document.getElementById('customer-email').value = '';
+    document.getElementById('payment-description').value = '';
+    
+    // Clear card element
+    cardElement.clear();
+    
+    // Remove button selections
+    document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function showAlert(title, message, type = 'info') {
+    // Create and show Bootstrap alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; max-width: 400px;';
+    
+    alertDiv.innerHTML = `
+        <strong>${title}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Recent Transactions
+async function loadRecentTransactions() {
+    try {
+        const response = await fetch('/payments/api/recent/');
+        const result = await response.json();
+        
+        const container = document.getElementById('recent-transactions');
+        
+        if (result.success && result.transactions.length > 0) {
+            container.innerHTML = result.transactions.map(tx => `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <div class="fw-bold">$${(tx.amount / 100).toFixed(2)}</div>
+                        <small class="text-muted">${new Date(tx.created_at).toLocaleString()}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-${tx.status === 'succeeded' ? 'success' : tx.status === 'failed' ? 'danger' : 'warning'}">
+                            ${tx.status}
+                        </span>
+                        <br>
+                        <small class="text-muted">${tx.id.substring(0, 12)}...</small>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<div class="text-center text-muted"><i class="fas fa-inbox"></i> No recent transactions</div>';
+        }
+    } catch (error) {
+        document.getElementById('recent-transactions').innerHTML = 
+            '<div class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error loading transactions</div>';
+    }
+}
+
+// Terminal Payment (placeholder)
+function initializeTerminalPayment() {
+    // This would integrate with Stripe Terminal for physical card readers
+    document.getElementById('terminal-status').innerHTML = 
+        '<i class="fas fa-info-circle"></i> Terminal reader integration coming soon...';
+}
+
+// Form Submission
+document.getElementById('payment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    processCardPayment();
+});
+
+// Initialize Everything
+document.addEventListener('DOMContentLoaded', function() {
+    initializeStripeElements();
+    setupQuickAmountButtons();
+    loadRecentTransactions();
+    initializeTerminalPayment();
+    setupMobileEnhancements();
+    
+    // Set default amount to $0.00
+    updateAmountDisplay(0);
+});
+
+// Mobile-specific enhancements
+function setupMobileEnhancements() {
+    // Prevent zoom on input focus for iOS
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            // Ensure font-size is at least 16px to prevent zoom
+            const currentFontSize = parseFloat(getComputedStyle(this).fontSize);
+            if (currentFontSize < 16) {
+                this.style.fontSize = '16px';
+            }
+        });
+    });
+    
+    // Enhanced touch handling for buttons
+    const touchButtons = document.querySelectorAll('.quick-amount-btn, .btn');
+    touchButtons.forEach(button => {
+        let touchTimeout;
+        
+        button.addEventListener('touchstart', function(e) {
+            this.classList.add('touching');
+            touchTimeout = setTimeout(() => {
+                this.classList.remove('touching');
+            }, 200);
+        }, { passive: true });
+        
+        button.addEventListener('touchend', function() {
+            clearTimeout(touchTimeout);
+            this.classList.remove('touching');
+        }, { passive: true });
+    });
+    
+    // Scroll to top of form when processing overlay shows
+    const originalShowProcessingOverlay = window.showProcessingOverlay;
+    window.showProcessingOverlay = function(title, message, type) {
+        // Scroll to top for mobile visibility
+        if (window.innerWidth <= 768) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        originalShowProcessingOverlay(title, message, type);
+    };
+    
+    // Improve keyboard handling on mobile
+    document.addEventListener('keydown', function(e) {
+        // Close keyboard when pressing "Done" on number pad
+        if (e.key === 'Enter' && document.activeElement.type === 'number') {
+            document.activeElement.blur();
+        }
+    });
+    
+    // Optimize form scrolling on mobile
+    if (window.innerWidth <= 768) {
+        const formContainer = document.querySelector('.payment-form-container');
+        if (formContainer) {
+            formContainer.style.paddingBottom = '80px'; // Extra space for mobile keyboards
+        }
+    }
+    
+    // Handle orientation changes
+    window.addEventListener('orientationchange', function() {
+        setTimeout(function() {
+            // Recalculate viewport heights and adjust accordingly
+            document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        }, 100);
+    });
+}
+
+// Add CSS custom property for mobile viewport height
+document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+</script>
+{% endblock %}

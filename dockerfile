@@ -1,0 +1,127 @@
+# base image  
+FROM python:3.8   
+
+# Set the working directory  
+WORKDIR /OnlineRetailPOS
+
+COPY . /OnlineRetailPOS/
+
+# Set environment variables  
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1  
+
+# Accept build arguments for Stripe configuration
+ARG STRIPE_SECRET_KEY
+ARG STRIPE_PUBLISHABLE_KEY
+ARG STRIPE_WEBHOOK_ENDPOINT_SECRET
+ENV STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+ENV STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+ENV STRIPE_WEBHOOK_ENDPOINT_SECRET=${STRIPE_WEBHOOK_ENDPOINT_SECRET}
+
+# Install all dependencies and perform migrations
+RUN apt-get update \
+ 	&& apt-get install -y --no-install-recommends gettext \
+ 	&& rm -rf /var/lib/apt/lists/* \
+ 	&& pip install --upgrade pip 
+RUN pip install -r requirements.txt --no-cache-dir
+
+# Expose port 8000
+EXPOSE 8000
+
+# Compile translations if any exist, then collect static
+RUN python manage.py compilemessages || true
+RUN python manage.py collectstatic --noinput
+
+# Please provide env varibales that are required to set up database configuration
+# Command to run migrations, ensure a superuser (if env vars provided), and start the server
+#
+# To auto-create the initial admin account, provide the following environment variables
+# (via `docker run -e` flags, an `.env` file, or docker-compose):
+#   - DJANGO_SUPERUSER_USERNAME
+#   - DJANGO_SUPERUSER_EMAIL (optional, defaults to admin@example.com)
+#   - DJANGO_SUPERUSER_PASSWORD
+# If these are not provided, the step is skipped safely.
+
+# Create startup script
+COPY <<EOF /start.sh
+#!/bin/bash
+set -e
+
+echo "Connect on this address:"
+echo "http://127.0.0.1:8000"
+echo "\$(hostname -I | cut -d' ' -f1):8000" 
+echo "Docker Container may have different IP, VPN will screw IP address as well"
+echo "Might not work on those cases"
+
+# Show database configuration
+echo "Database configuration is set to \${DATABASE_ENGINE:-django.db.backends.sqlite3}"
+
+# Run migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# Create superuser if environment variables are provided
+if [ -n "\$DJANGO_SUPERUSER_USERNAME" ] && [ -n "\$DJANGO_SUPERUSER_PASSWORD" ]; then
+    echo "Creating superuser..."
+    python manage.py shell -c "
+import os
+from django.contrib.auth import get_user_model
+User = get_user_model()
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username, email, password)
+    print(f'Superuser {username} created successfully')
+else:
+    print(f'Superuser {username} already exists')
+"
+else
+    echo "No superuser environment variables provided, skipping user creation"
+fi
+
+# Start the Django development server
+exec python manage.py runserver 0.0.0.0:8000
+EOF
+
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
+
+# Don't forget to create a superuser from the terminal in Docker for accessing the app
+
+
+# Required Variables:
+# - SECRET_KEY_DEV: Pass in a secure key            (Default: 'django_dev_secret_key_online-retail-pos-1234')
+# - NAME_OF_DATABASE: 'sqlite'/'postgres'/'mysql'   (Default: 'sqlite')
+
+# Required if DB is other than sqlite from provided options
+# - DB_USERNAME: 'DB_USER_NAME' 
+# - DB_PASSWORD: 'DB_USER_PASS' 
+# - DB_HOST: 'YOUR_DB_HOST' 
+# - DB_PORT: 'YOUR_DB_HOST_PORT'
+
+# Optional (to auto-create admin user at container start)
+# - DJANGO_SUPERUSER_USERNAME
+# - DJANGO_SUPERUSER_EMAIL (optional)
+# - DJANGO_SUPERUSER_PASSWORD
+
+# STORE INFORMATION and PRINTER SETTING from .env.sample is Optional for running the app
+# However, I will advise setting up if you plan to use it frequently
+
+
+# Running the Dockerfile:
+# - Make sure you provide required environment variables, either through passing .env file in docker run args or env variables itself
+# - The Dockerfile will run on default configuration without any environment variables, and the database will be set to sqlite3
+# - Update/Create .env file, change .env.sample to .env if you are providing an edited .env file 
+# - Figure out mounting the sqlite file in Docker so that you don't lose your data when Docker stops 
+# - Passing varibles example: docker run -e "VARIABLE1=value1" -e "VARIABLE2=value2" <image_name>
+# - Passing .env file itself: docker run --env-file=/path/to/.env <image_name>
+
+
+# Build the image and run Docker using these commands, for a custom Docker image compile:
+# docker build -t docker-django-pos .
+# docker run -i -t -p 8000:8000 docker-django-pos 
+
+# Once built, create a superuser from the Django container terminal

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: #fff;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .admin-header h1 {
+        color: #2c3e50;
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+    
+    .admin-breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 10px 0 0 0;
+    }
+    
+    .admin-breadcrumb .breadcrumb-item {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    
+    .admin-breadcrumb .breadcrumb-item.active {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .admin-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        color: #bdc3c7;
+    }
+</style>
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    {% block page_header %}
+    <h1>{% block page_title %}{% trans "Administration" %}{% endblock %}</h1>
+    {% endblock %}
+    
+    {% block breadcrumb %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb admin-breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+            {% block breadcrumb_items %}
+            {% endblock %}
+        </ol>
+    </nav>
+    {% endblock %}
+</div>
+
+{% block admin_content %}
+{% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add active state to current sidebar menu item
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const sidebarLinks = document.querySelectorAll('.sidebar .nav-link, .sidebar .collapse-item');
+    
+    sidebarLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+            // Remove active from all items
+            document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active to current item
+            const navItem = link.closest('.nav-item');
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+            
+            // If it's a collapse item, expand the parent
+            const collapse = link.closest('.collapse');
+            if (collapse) {
+                collapse.classList.add('show');
+                const toggle = document.querySelector(`[data-target="#${collapse.id}"]`);
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            }
+        }
+    });
+});
+</script>
+{{ block.super }}
+{% endblock %}

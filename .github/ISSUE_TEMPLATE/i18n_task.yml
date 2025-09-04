@@ -1,0 +1,54 @@
+name: i18n Task
+description: Track translation work for a single template/page
+title: I18N-XXX
+labels:
+  - i18n
+  - translation
+  - template
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use the ID from docs/I18N_USER_STORIES.md as the exact issue title (e.g., I18N-001).
+  - type: input
+    id: template
+    attributes:
+      label: Template
+      description: The template file name (e.g., addInventory.html)
+      placeholder: addInventory.html
+    validations:
+      required: true
+  - type: input
+    id: path
+    attributes:
+      label: Path
+      description: Path to the template in the repo
+      placeholder: onlineretailpos/templates/addInventory.html
+    validations:
+      required: true
+  - type: input
+    id: persona
+    attributes:
+      label: Persona
+      placeholder: Cashier / Manager / Inventory Clerk
+    validations:
+      required: true
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User story
+      description: One sentence user story
+      placeholder: See/Add/Use this page in my language to...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Bullet list of conditions to consider the page i18n-complete
+      placeholder: |
+        - i18n loaded; headings/buttons/labels translated
+        - JS prompts localized
+        - fr/es catalogs updated; no English leakage
+    validations:
+      required: true

@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Webhook Dashboard" %} - Ireti POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-webhook"></i>
+            {% trans "Webhook Dashboard" %}
+        </h1>
+        <div class="btn-group">
+            <a href="{% url 'payments:dashboard' %}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> {% trans "Payment Dashboard" %}
+            </a>
+            <button type="button" class="btn btn-sm btn-info" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt"></i> {% trans "Refresh" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Webhook Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {% trans "Total Webhooks" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ total_webhooks }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-webhook fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {% trans "Processed" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ processed_webhooks }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                {% trans "Failed" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ failed_webhooks }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% trans "Success Rate" %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ success_rate }}%
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webhook Endpoint Information -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-info">
+                <i class="fas fa-info-circle"></i> {% trans "Webhook Configuration" %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-info">{% trans "Endpoint URL" %}</h6>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="webhookUrl" 
+                                   value="{{ request.build_absolute_uri }}/payments/webhook/" readonly>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('webhookUrl')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">
+                            {% trans "Configure this URL in your Stripe Dashboard webhook settings" %}
+                        </small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-info">{% trans "Recommended Events" %}</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item p-1"><code>payment_intent.succeeded</code></li>
+                        <li class="list-group-item p-1"><code>payment_intent.payment_failed</code></li>
+                        <li class="list-group-item p-1"><code>payment_intent.canceled</code></li>
+                        <li class="list-group-item p-1"><code>charge.succeeded</code></li>
+                        <li class="list-group-item p-1"><code>refund.created</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Webhook Events -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> {% trans "Recent Webhook Events" %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="webhooksTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Event ID" %}</th>
+                            <th>{% trans "Event Type" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Received" %}</th>
+                            <th>{% trans "Processed" %}</th>
+                            <th>{% trans "Result" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for webhook in recent_webhooks %}
+                        <tr>
+                            <td><code>{{ webhook.stripe_event_id }}</code></td>
+                            <td>
+                                <span class="badge badge-info">{{ webhook.event_type }}</span>
+                            </td>
+                            <td>
+                                {% if webhook.processed %}
+                                    {% if webhook.processing_result.status == 'error' %}
+                                        <span class="badge badge-danger">
+                                            <i class="fas fa-times"></i> {% trans "Failed" %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check"></i> {% trans "Success" %}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-clock"></i> {% trans "Pending" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ webhook.created_at|date:"M d, Y H:i:s" }}</td>
+                            <td>
+                                {% if webhook.processed_at %}
+                                    {{ webhook.processed_at|date:"M d, Y H:i:s" }}
+                                {% else %}
+                                    <em class="text-muted">{% trans "Not processed" %}</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if webhook.processing_result %}
+                                    {% if webhook.processing_result.status == 'error' %}
+                                        <small class="text-danger">
+                                            {{ webhook.processing_result.message|truncatechars:50 }}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-success">
+                                            {{ webhook.processing_result.status|capfirst }}
+                                        </small>
+                                    {% endif %}
+                                {% else %}
+                                    <em class="text-muted">{% trans "No result" %}</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewWebhookDetails('{{ webhook.stripe_event_id }}')">
+                                    <i class="fas fa-eye"></i> {% trans "Details" %}
+                                </button>
+                                {% if not webhook.processed %}
+                                <button class="btn btn-sm btn-outline-warning" onclick="reprocessWebhook('{{ webhook.stripe_event_id }}')">
+                                    <i class="fas fa-redo"></i> {% trans "Retry" %}
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="fas fa-info-circle"></i> {% trans "No webhook events received yet" %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Webhook Details Modal -->
+<div class="modal fade" id="webhookDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Webhook Event Details" %}</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="webhookDetailsContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> {% trans "Loading..." %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize DataTables
+$(document).ready(function() {
+    $('#webhooksTable').DataTable({
+        "order": [[ 3, "desc" ]], // Sort by received date descending
+        "pageLength": 25
+    });
+});
+
+// Copy to clipboard function
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(element.value).then(function() {
+        // Show success feedback
+        const button = element.nextElementSibling.querySelector('button');
+        const originalIcon = button.querySelector('i').className;
+        button.querySelector('i').className = 'fas fa-check text-success';
+        setTimeout(() => {
+            button.querySelector('i').className = originalIcon;
+        }, 2000);
+    });
+}
+
+// View webhook details
+function viewWebhookDetails(eventId) {
+    $('#webhookDetailsContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> {% trans "Loading..." %}</div>');
+    $('#webhookDetailsModal').modal('show');
+    
+    // In a real implementation, you would fetch details via AJAX
+    // For now, show a placeholder
+    setTimeout(() => {
+        $('#webhookDetailsContent').html(`
+            <div class="form-group">
+                <label><strong>{% trans "Event ID" %}:</strong></label>
+                <p><code>${eventId}</code></p>
+            </div>
+            <div class="form-group">
+                <label><strong>{% trans "Event Data" %}:</strong></label>
+                <pre class="bg-light p-3 rounded"><code>{% trans "Event data would be displayed here..." %}</code></pre>
+            </div>
+        `);
+    }, 500);
+}
+
+// Reprocess webhook
+function reprocessWebhook(eventId) {
+    if (confirm('{% trans "Are you sure you want to reprocess this webhook?" %}')) {
+        // In a real implementation, you would trigger reprocessing via AJAX
+        alert('{% trans "Webhook reprocessing functionality would be implemented here" %}');
+    }
+}
+
+// Refresh dashboard
+function refreshDashboard() {
+    location.reload();
+}
+
+// Test webhook endpoint
+function testWebhook() {
+    alert('{% trans "Test webhook functionality would send a test event to the endpoint" %}');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+# Exclude local data and development artifacts from the image build context
+postgres_data/
+.env
+.git/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.vscode/

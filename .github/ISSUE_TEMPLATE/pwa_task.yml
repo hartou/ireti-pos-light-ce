@@ -1,0 +1,50 @@
+name: PWA Task
+description: Track a PWA transformation user story
+title: PWA-XXX
+labels:
+  - PWA
+  - frontend
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use the ID from docs/PWA_USER_STORIES.md as the exact issue title (e.g., PWA-001).
+  - type: input
+    id: area
+    attributes:
+      label: Area
+      placeholder: Manifest / Service Worker / Settings UI / etc.
+    validations:
+      required: true
+  - type: input
+    id: path
+    attributes:
+      label: Path/Component
+      placeholder: onlineretailpos/static/manifest.webmanifest
+    validations:
+      required: true
+  - type: input
+    id: persona
+    attributes:
+      label: Persona
+      placeholder: Operator / Cashier / Manager / Admin
+    validations:
+      required: true
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User story
+      placeholder: As a <persona>, I want <capability> so that <value>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Bullet list of conditions to consider the task PWA-complete
+      placeholder: |
+        - Manifest referenced from base template
+        - SW precaches shell and serves offline
+        - Lighthouse PWA audit ≥ 90
+    validations:
+      required: true

@@ -1,0 +1,943 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Status - {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+    .payment-status-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .status-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .status-card.processing {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, #fff9e6 0%, #fff 100%);
+    }
+
+    .status-card.succeeded {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #e8f5e8 0%, #fff 100%);
+    }
+
+    .status-card.failed {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #ffeaea 0%, #fff 100%);
+    }
+
+    .status-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 35px;
+        color: white;
+    }
+
+    .status-icon.processing {
+        background: #ffc107;
+        animation: pulse 2s infinite;
+    }
+
+    .status-icon.succeeded {
+        background: #28a745;
+        animation: checkmark 0.6s ease-in-out;
+    }
+
+    .status-icon.failed {
+        background: #dc3545;
+        animation: shake 0.5s;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes checkmark {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .spinner {
+        width: 35px;
+        height: 35px;
+        border: 4px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .status-title {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .status-title.processing { color: #856404; }
+    .status-title.succeeded { color: #155724; }
+    .status-title.failed { color: #721c24; }
+
+    .status-message {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 30px;
+        line-height: 1.5;
+    }
+
+    .payment-details {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .detail-label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin: 20px 0;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #ffc107, #fd7e14);
+        transition: width 0.5s ease;
+        animation: progress-shine 2s infinite;
+    }
+
+    @keyframes progress-shine {
+        0% { background-position: -200px 0; }
+        100% { background-position: calc(200px + 100%) 0; }
+    }
+
+    .action-buttons {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .status-btn {
+        padding: 12px 30px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-primary-status {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-primary-status:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary-status {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary-status:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+    }
+
+    .btn-success-status {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success-status:hover {
+        background: #1e7e34;
+        transform: translateY(-2px);
+    }
+
+    .real-time-indicator {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 5px 12px;
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid #28a745;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .real-time-indicator::before {
+        content: '●';
+        margin-right: 5px;
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        50% { opacity: 0.5; }
+    }
+
+    /* Mobile-First Responsive Design */
+    @media (max-width: 992px) {
+        .payment-status-container {
+            padding: 15px;
+        }
+        
+        .status-card {
+            padding: 35px 25px;
+            margin-bottom: 20px;
+        }
+        
+        .status-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 30px;
+        }
+        
+        .status-title {
+            font-size: 2.2rem;
+        }
+        
+        .status-amount {
+            font-size: 1.8rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .payment-status-container {
+            padding: 10px;
+        }
+        
+        .status-card {
+            padding: 30px 20px;
+            border-radius: 12px;
+        }
+        
+        .status-icon {
+            width: 65px;
+            height: 65px;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .status-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        
+        .status-amount {
+            font-size: 1.6rem;
+        }
+        
+        .status-message {
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .status-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+        
+        .details-section {
+            padding: 15px;
+        }
+        
+        .detail-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .payment-status-container {
+            padding: 5px;
+        }
+        
+        .status-card {
+            padding: 25px 15px;
+            border-radius: 10px;
+        }
+        
+        .status-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 25px;
+            margin-bottom: 12px;
+        }
+        
+        .status-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .status-amount {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+        
+        .status-message {
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            gap: 10px;
+        }
+        
+        .status-btn {
+            padding: 18px;
+            font-size: 1rem;
+            min-height: 55px;
+            border-radius: 8px;
+        }
+        
+        .spinner {
+            width: 25px;
+            height: 25px;
+        }
+        
+        .real-time-indicator {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .status-card {
+            padding: 20px 12px;
+        }
+        
+        .status-title {
+            font-size: 1.6rem;
+        }
+        
+        .status-amount {
+            font-size: 1.3rem;
+        }
+        
+        .status-btn {
+            padding: 20px;
+            font-size: 1.1rem;
+            min-height: 60px;
+        }
+    }
+    
+    /* Touch-friendly enhancements */
+    .status-btn:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Prevent text selection on interactive elements */
+    .status-btn,
+    .real-time-indicator {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Improved focus states for mobile */
+    @media (hover: none) and (pointer: coarse) {
+        .status-btn:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+    }
+    
+    /* Mobile viewport height handling */
+    @media (max-width: 768px) {
+        .payment-status-container {
+            min-height: calc(var(--vh, 1vh) * 100);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+    }
+    
+    /* Orientation-specific adjustments */
+    @media (max-width: 768px) and (orientation: landscape) {
+        .status-card {
+            padding: 20px;
+        }
+        
+        .status-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        
+        .status-title {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        
+        .status-amount {
+            font-size: 1.3rem;
+        }
+        
+        .action-buttons {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        
+        .status-btn {
+            min-width: 120px;
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-status-container">
+    <div class="real-time-indicator">
+        LIVE STATUS
+    </div>
+
+    <!-- Payment Status Card -->
+    <div class="status-card" id="statusCard">
+        <!-- Status Icon -->
+        <div class="status-icon" id="statusIcon">
+            <div class="spinner" id="spinner"></div>
+            <i class="fas fa-check" id="successIcon" style="display: none;"></i>
+            <i class="fas fa-times" id="errorIcon" style="display: none;"></i>
+        </div>
+
+        <!-- Status Title -->
+        <h2 class="status-title" id="statusTitle">Processing Payment</h2>
+
+        <!-- Status Message -->
+        <p class="status-message" id="statusMessage">
+            Please wait while we securely process your payment...
+        </p>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="payment-details" id="paymentDetails" style="display: none;">
+            <div class="detail-row">
+                <span class="detail-label">Payment ID:</span>
+                <span class="detail-value" id="paymentId">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Customer:</span>
+                <span class="detail-value" id="customerName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Payment Method:</span>
+                <span class="detail-value" id="paymentMethod">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Transaction Time:</span>
+                <span class="detail-value" id="transactionTime">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Total Amount:</span>
+                <span class="detail-value" id="totalAmount">-</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+            <a href="#" class="status-btn btn-primary-status" id="printReceiptBtn" style="display: none;">
+                <i class="fas fa-print"></i> Print Receipt
+            </a>
+            <a href="#" class="status-btn btn-success-status" id="emailReceiptBtn" style="display: none;">
+                <i class="fas fa-envelope"></i> Email Receipt
+            </a>
+            <a href="{% url 'payments:payment_form' %}" class="status-btn btn-secondary-status" id="newPaymentBtn" style="display: none;">
+                <i class="fas fa-plus"></i> New Payment
+            </a>
+            <a href="#" class="status-btn btn-primary-status" id="retryPaymentBtn" style="display: none;">
+                <i class="fas fa-redo"></i> Retry Payment
+            </a>
+        </div>
+    </div>
+
+    <!-- Real-time Updates Log -->
+    <div class="mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history"></i> Real-time Updates
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="updatesLog" style="max-height: 200px; overflow-y: auto;">
+                    <div class="text-muted">Waiting for payment updates...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get payment intent ID from URL parameters or session
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntentId = urlParams.get('payment_intent') || '{{ payment_intent_id }}';
+    
+    // Initialize mobile enhancements
+    setupMobileEnhancements();
+    
+    // Status tracking variables
+    let currentStatus = 'processing';
+    let progressSteps = ['created', 'processing', 'succeeded'];
+    let currentStepIndex = 0;
+    
+    // DOM elements
+    const statusCard = document.getElementById('statusCard');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusMessage = document.getElementById('statusMessage');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
+    const paymentDetails = document.getElementById('paymentDetails');
+    const actionButtons = document.getElementById('actionButtons');
+    const updatesLog = document.getElementById('updatesLog');
+    
+    // Status configurations
+    const statusConfig = {
+        processing: {
+            title: 'Processing Payment',
+            message: 'Please wait while we securely process your payment...',
+            icon: 'spinner',
+            class: 'processing'
+        },
+        requires_payment_method: {
+            title: 'Payment Method Required',
+            message: 'Additional payment information is needed to complete this transaction.',
+            icon: 'spinner',
+            class: 'processing'
+        },
+        requires_confirmation: {
+            title: 'Confirming Payment',
+            message: 'Verifying your payment details...',
+            icon: 'spinner',
+            class: 'processing'
+        },
+        succeeded: {
+            title: 'Payment Successful!',
+            message: 'Your payment has been processed successfully. Thank you for your purchase!',
+            icon: 'success',
+            class: 'succeeded'
+        },
+        failed: {
+            title: 'Payment Failed',
+            message: 'We were unable to process your payment. Please try again or use a different payment method.',
+            icon: 'error',
+            class: 'failed'
+        },
+        canceled: {
+            title: 'Payment Canceled',
+            message: 'The payment was canceled. You can try again whenever you\'re ready.',
+            icon: 'error',
+            class: 'failed'
+        }
+    };
+    
+    // Initialize status checking
+    if (paymentIntentId) {
+        checkPaymentStatus();
+        // Set up real-time polling every 2 seconds
+        const statusInterval = setInterval(checkPaymentStatus, 2000);
+        
+        // Stop polling after 5 minutes to prevent excessive requests
+        setTimeout(() => {
+            clearInterval(statusInterval);
+            addUpdateLog('Status monitoring stopped after 5 minutes');
+        }, 300000);
+    } else {
+        updateStatus('failed', 'No payment ID provided');
+    }
+    
+    // Check payment status via API
+    async function checkPaymentStatus() {
+        try {
+            const response = await fetch(`/payments/api/intent/${paymentIntentId}/`, {
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    const paymentIntent = data.payment_intent;
+                    const localTransaction = data.local_transaction;
+                    
+                    updateStatus(paymentIntent.status, null, {
+                        paymentId: paymentIntent.id,
+                        amount: paymentIntent.amount,
+                        currency: paymentIntent.currency,
+                        customer: paymentIntent.customer,
+                        created: paymentIntent.created,
+                        payment_method: paymentIntent.payment_method,
+                        localTransaction: localTransaction
+                    });
+                    
+                    addUpdateLog(`Status: ${paymentIntent.status} - ${new Date().toLocaleTimeString()}`);
+                } else {
+                    addUpdateLog(`Error: ${data.message}`);
+                }
+            } else {
+                addUpdateLog(`API Error: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error checking payment status:', error);
+            addUpdateLog(`Network error: ${error.message}`);
+        }
+    }
+    
+    // Update payment status display
+    function updateStatus(status, customMessage = null, paymentData = null) {
+        const config = statusConfig[status] || statusConfig.failed;
+        
+        // Update status class
+        statusCard.className = `status-card ${config.class}`;
+        statusIcon.className = `status-icon ${config.class}`;
+        statusTitle.className = `status-title ${config.class}`;
+        
+        // Update content
+        statusTitle.textContent = config.title;
+        statusMessage.textContent = customMessage || config.message;
+        
+        // Update icon
+        document.getElementById('spinner').style.display = config.icon === 'spinner' ? 'block' : 'none';
+        document.getElementById('successIcon').style.display = config.icon === 'success' ? 'block' : 'none';
+        document.getElementById('errorIcon').style.display = config.icon === 'error' ? 'block' : 'none';
+        
+        // Update progress bar
+        if (status === 'processing') {
+            progressBar.style.width = '60%';
+        } else if (status === 'succeeded') {
+            progressBar.style.width = '100%';
+            progressContainer.style.display = 'none';
+        } else {
+            progressContainer.style.display = 'none';
+        }
+        
+        // Show payment details for completed payments
+        if (paymentData && (status === 'succeeded' || status === 'failed')) {
+            populatePaymentDetails(paymentData);
+            paymentDetails.style.display = 'block';
+        }
+        
+        // Show appropriate action buttons
+        updateActionButtons(status);
+        
+        currentStatus = status;
+    }
+    
+    // Populate payment details
+    function populatePaymentDetails(data) {
+        document.getElementById('paymentId').textContent = data.paymentId || '-';
+        document.getElementById('customerName').textContent = data.customer || 'Guest';
+        document.getElementById('paymentMethod').textContent = formatPaymentMethod(data.payment_method);
+        document.getElementById('transactionTime').textContent = formatDate(data.created);
+        document.getElementById('totalAmount').textContent = formatAmount(data.amount, data.currency);
+    }
+    
+    // Update action buttons based on status
+    function updateActionButtons(status) {
+        // Hide all buttons first
+        const buttons = actionButtons.querySelectorAll('.status-btn');
+        buttons.forEach(btn => btn.style.display = 'none');
+        
+        if (status === 'succeeded') {
+            document.getElementById('printReceiptBtn').style.display = 'inline-flex';
+            document.getElementById('emailReceiptBtn').style.display = 'inline-flex';
+            document.getElementById('newPaymentBtn').style.display = 'inline-flex';
+            actionButtons.style.display = 'flex';
+        } else if (status === 'failed' || status === 'canceled') {
+            document.getElementById('retryPaymentBtn').style.display = 'inline-flex';
+            document.getElementById('newPaymentBtn').style.display = 'inline-flex';
+            actionButtons.style.display = 'flex';
+        } else {
+            actionButtons.style.display = 'none';
+        }
+    }
+    
+    // Add update to real-time log
+    function addUpdateLog(message) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'small text-muted mb-1';
+        logEntry.innerHTML = `<i class="fas fa-dot-circle text-primary"></i> ${message}`;
+        
+        if (updatesLog.children.length === 0 || updatesLog.children[0].textContent.includes('Waiting for')) {
+            updatesLog.innerHTML = '';
+        }
+        
+        updatesLog.insertBefore(logEntry, updatesLog.firstChild);
+        
+        // Keep only last 10 entries
+        while (updatesLog.children.length > 10) {
+            updatesLog.removeChild(updatesLog.lastChild);
+        }
+    }
+    
+    // Utility functions
+    function formatAmount(amount, currency) {
+        const value = amount / 100;
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency.toUpperCase()
+        }).format(value);
+    }
+    
+    function formatDate(timestamp) {
+        return new Date(timestamp * 1000).toLocaleString();
+    }
+    
+    function formatPaymentMethod(method) {
+        if (!method) return 'Card';
+        if (typeof method === 'string') return 'Card';
+        return method.type ? method.type.charAt(0).toUpperCase() + method.type.slice(1) : 'Card';
+    }
+    
+    // Button event handlers
+    document.getElementById('printReceiptBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        // TODO: Implement receipt printing
+        alert('Receipt printing feature coming soon!');
+    });
+    
+    document.getElementById('emailReceiptBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        // TODO: Implement email receipt
+        alert('Email receipt feature coming soon!');
+    });
+    
+    document.getElementById('retryPaymentBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        // Redirect back to payment form with amount preserved
+        window.location.href = '{% url "payments:payment_form" %}';
+    });
+});
+
+// Mobile-specific enhancements for payment status
+function setupMobileEnhancements() {
+    // Handle viewport height changes
+    function setVH() {
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    }
+    
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(setVH, 100);
+    });
+    
+    // Touch feedback for action buttons
+    const actionButtons = document.querySelectorAll('.status-btn');
+    actionButtons.forEach(button => {
+        let touchTimeout;
+        
+        button.addEventListener('touchstart', function(e) {
+            this.style.transform = 'scale(0.98)';
+            
+            // Add haptic feedback if available
+            if ('vibrate' in navigator) {
+                navigator.vibrate(10);
+            }
+            
+            touchTimeout = setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        }, { passive: true });
+        
+        button.addEventListener('touchend', function() {
+            clearTimeout(touchTimeout);
+            this.style.transform = '';
+        }, { passive: true });
+    });
+    
+    // Prevent accidental navigation
+    if (window.innerWidth <= 768) {
+        // Disable pull-to-refresh
+        document.body.style.overscrollBehavior = 'contain';
+        
+        // Warn before leaving page if payment is processing
+        window.addEventListener('beforeunload', function(e) {
+            if (currentStatus === 'processing') {
+                const message = 'Payment is still processing. Are you sure you want to leave?';
+                e.returnValue = message;
+                return message;
+            }
+        });
+    }
+    
+    // Enhanced status card animations for mobile
+    const statusCard = document.getElementById('statusCard');
+    if (statusCard) {
+        // Add subtle bounce animation on status changes
+        const originalUpdateStatus = window.updatePaymentStatus;
+        if (originalUpdateStatus) {
+            window.updatePaymentStatus = function(status, data) {
+                // Add mobile-friendly animation
+                statusCard.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    statusCard.style.transform = '';
+                }, 200);
+                
+                originalUpdateStatus(status, data);
+            };
+        }
+    }
+    
+    // Auto-refresh handling optimized for mobile
+    let isPageVisible = true;
+    let refreshInterval;
+    
+    document.addEventListener('visibilitychange', function() {
+        isPageVisible = !document.hidden;
+        
+        if (isPageVisible && currentStatus === 'processing') {
+            // Resume updates when page becomes visible
+            if (refreshInterval) clearInterval(refreshInterval);
+            startStatusPolling();
+        } else {
+            // Pause updates to save battery when page is hidden
+            if (refreshInterval) clearInterval(refreshInterval);
+        }
+    });
+    
+    // Network status handling for mobile
+    if ('onLine' in navigator) {
+        window.addEventListener('online', function() {
+            if (currentStatus === 'processing') {
+                showMobileNotification('Connection restored. Resuming payment status updates.', 'success');
+                startStatusPolling();
+            }
+        });
+        
+        window.addEventListener('offline', function() {
+            showMobileNotification('Connection lost. Payment status updates paused.', 'warning');
+        });
+    }
+    
+    console.log('Mobile enhancements initialized for payment status');
+}
+
+// Mobile notification system
+function showMobileNotification(message, type = 'info') {
+    const existing = document.querySelector('.mobile-notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = `mobile-notification alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info'}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 10001;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideInDown 0.3s ease-out;
+    `;
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideInDown 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
