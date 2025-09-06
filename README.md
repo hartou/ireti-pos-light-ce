@@ -1,20 +1,19 @@
-# 🏪 Ireti POS Light v1.0.0
+# 🛒 Ireti POS Light - Community Edition
 
-**A Modern, Lightweight Point-of-Sale System with Complete Stripe Payment Integration**
+![Version](https://img.shields.io/badge/version-1.0.0--CE-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![Django](https://img.shields.io/badge/django-3.2-orange)
+![Stripe](https://img.shields.io/badge/stripe-integrated-blueviolet)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square" alt="version">
-  <img src="https://img.shields.io/github/license/hartou/ireti-pos-light?style=flat-square&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
-  <img src="https://img.shields.io/github/last-commit/hartou/ireti-pos-light?style=flat-square&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-  <img src="https://img.shields.io/github/languages/top/hartou/ireti-pos-light?style=flat-square&color=0080ff" alt="repo-top-language">
-  <img src="https://img.shields.io/badge/payments-stripe-purple?style=flat-square&logo=stripe" alt="stripe-integration">
-</p>
+**Ireti POS Light CE** is a modern, open-source Point of Sale system with complete Stripe payment integration. It's designed for small businesses that need a reliable, secure, and feature-rich POS solution without the enterprise price tag.
 
 ---
 
-## 📋 What is Ireti POS Light?
+## 📋 What is Ireti POS Light CE?
 
-**Ireti POS Light v1.0.0** is a production-ready, web-based Point-of-Sale (POS) system built with Django that enables businesses to manage retail operations with modern payment processing. This major release introduces complete Stripe payment integration, making it a comprehensive solution for businesses requiring secure, reliable payment processing.
+**Ireti POS Light Community Edition v1.0.0** is a production-ready, web-based Point-of-Sale (POS) system built with Django that enables businesses to manage retail operations with modern payment processing. This Community Edition provides complete Stripe payment integration, making it a comprehensive solution for small businesses requiring secure, reliable payment processing.
 
 ### 🎯 **Core Purpose**
 - **💳 Payment Processing**: Complete Stripe integration with real-time payment processing, refunds, and transaction management
@@ -56,7 +55,14 @@
 - **Transaction History**: Complete audit trail of all sales
 - **Multi-User Support**: Role-based access with staff and admin levels
 
-### 🖥️ **Technical Features**
+### � **Security & Compliance**
+
+- **PCI Compliance**: Secure card handling via Stripe
+- **CSRF Protection**: Protection against web vulnerabilities
+- **Audit Logging**: Complete transaction audit trail
+- **User Authentication**: Role-based access control
+
+### �🖥️ **Technical Features**
 - **Multi-Language Support**: Internationalization (i18n) ready
 - **Database Flexibility**: SQLite (development) or PostgreSQL (production)
 - **Docker Ready**: Containerized deployment with Docker Compose
@@ -70,15 +76,18 @@
 ### Option 1: Using Pre-built Docker Image (Recommended)
 
 ```bash
-# Pull the latest image from GitHub Container Registry
-docker pull ghcr.io/hartou/ireti-pos-light:latest
+# Pull the latest CE image from GitHub Container Registry
+docker pull ghcr.io/hartou/ireti-pos-light-ce:latest
 
-# Run with automatic admin user creation
+# Run with Stripe configuration
 docker run -p 8000:8000 \
+  -e STRIPE_SECRET_KEY=sk_test_your_key \
+  -e STRIPE_PUBLISHABLE_KEY=pk_test_your_key \
+  -e STRIPE_WEBHOOK_ENDPOINT_SECRET=whsec_your_secret \
   -e DJANGO_SUPERUSER_USERNAME=admin \
   -e DJANGO_SUPERUSER_PASSWORD=Admin123! \
   -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
-  ghcr.io/hartou/ireti-pos-light:latest
+  ghcr.io/hartou/ireti-pos-light-ce:latest
 ```
 
 **Access the application:**
@@ -109,8 +118,8 @@ docker compose -f docker-compose.prod.yml up -d
 
 ```bash
 # Clone the repository
-git clone https://github.com/hartou/ireti-pos-light.git
-cd ireti-pos-light
+git clone https://github.com/hartou/ireti-pos-light-ce.git
+cd ireti-pos-light-ce
 
 # Install Python dependencies
 pip install -r requirements.txt
@@ -125,6 +134,17 @@ python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000
 ```
 
+### 🔧 **Stripe Configuration**
+
+1. Get your Stripe API keys from [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+2. Create a `.env` file or set environment variables:
+
+```bash
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_ENDPOINT_SECRET=whsec_...
+```
+
 ---
 
 ## 📦 Deployment Options
@@ -135,13 +155,13 @@ python manage.py runserver 0.0.0.0:8000
 
 ```bash
 # Latest stable release
-docker pull ghcr.io/hartou/ireti-pos-light:latest
+docker pull ghcr.io/hartou/ireti-pos-light-ce:latest
 
 # Specific version
-docker pull ghcr.io/hartou/ireti-pos-light:v0.0.2
+docker pull ghcr.io/hartou/ireti-pos-light-ce:v1.0.0
 
 # All available tags
-docker pull ghcr.io/hartou/ireti-pos-light:0.0.2
+docker pull ghcr.io/hartou/ireti-pos-light-ce:1.0.0
 ```
 
 ### 🗄️ **Database Options**
@@ -261,7 +281,7 @@ ireti-pos-light/
 ```
 
 ### **Contributing**
-1. Fork the repository: https://github.com/hartou/ireti-pos-light
+1. Fork the repository: https://github.com/hartou/ireti-pos-light-ce
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes and test thoroughly
 4. Submit a pull request with clear description
@@ -294,15 +314,30 @@ This project follows a standardized release process with automated tooling:
 
 ## 📞 Support & Documentation
 
-- **GitHub Repository**: https://github.com/hartou/ireti-pos-light
-- **Container Images**: https://github.com/hartou/ireti-pos-light/pkgs/container/ireti-pos-light
-- **Latest Releases**: https://github.com/hartou/ireti-pos-light/releases
-- **Issue Tracker**: https://github.com/hartou/ireti-pos-light/issues
-- **Deployment Guide**: [DEPLOYMENT.md](https://github.com/hartou/ireti-pos-light/blob/main/DEPLOYMENT.md)
+- **GitHub Repository**: https://github.com/hartou/ireti-pos-light-ce
+- **Container Images**: https://github.com/hartou/ireti-pos-light-ce/pkgs/container/ireti-pos-light-ce
+- **Latest Releases**: https://github.com/hartou/ireti-pos-light-ce/releases
+- **Issue Tracker**: https://github.com/hartou/ireti-pos-light-ce/issues
+- **Deployment Guide**: [DEPLOYMENT.md](https://github.com/hartou/ireti-pos-light-ce/blob/main/DEPLOYMENT.md)
 
 ---
 
-## 📄 License
+## � Version Differences
+
+| Feature | Community Edition | Enterprise Edition |
+|---------|-------------------|-------------------|
+| **Core POS** | ✅ Full-featured | ✅ Enhanced |
+| **Stripe Payments** | ✅ Complete | ✅ + Multi-processor |
+| **Container Deploy** | ✅ Docker ready | ✅ + Kubernetes |
+| **SQLite Database** | ✅ Default | ✅ + PostgreSQL/MySQL |
+| **Basic Admin** | ✅ Included | ✅ + Advanced analytics |
+| **Community Support** | ✅ GitHub issues | ❌ |
+| **Enterprise Support** | ❌ | ✅ 24/7 SLA |
+| **Custom Integrations** | ❌ | ✅ Professional services |
+
+---
+
+## �📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
@@ -312,4 +347,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 Ready to streamline your retail operations? Choose your deployment method above and have your POS system running in minutes!
 
-**Need help?** Check our [documentation](https://github.com/hartou/ireti-pos-light/wiki) or [open an issue](https://github.com/hartou/ireti-pos-light/issues) for support.
+**Need help?** Check our [documentation](https://github.com/hartou/ireti-pos-light-ce/wiki) or [open an issue](https://github.com/hartou/ireti-pos-light-ce/issues) for support.
