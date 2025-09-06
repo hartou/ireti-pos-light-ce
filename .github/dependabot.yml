@@ -1,0 +1,64 @@
+# Dependabot configuration for automated dependency updates
+# This ensures security vulnerabilities in dependencies are addressed automatically
+
+version: 2
+updates:
+  # Enable version updates for Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "hartou"
+    assignees:
+      - "hartou"
+    commit-message:
+      prefix: "security"
+      prefix-development: "dev-deps"
+      include: "scope"
+    # Group security updates together
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "hartou"
+    assignees:
+      - "hartou"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Enable version updates for npm (if package.json exists)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "hartou"
+    assignees:
+      - "hartou"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "dev-deps"
+      include: "scope"
