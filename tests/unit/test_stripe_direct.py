@@ -20,7 +20,7 @@ stripe_secret = os.getenv('STRIPE_SECRET_KEY')
 stripe_public = os.getenv('STRIPE_PUBLISHABLE_KEY')
 
 if stripe_secret:
-    print(f"✅ STRIPE_SECRET_KEY: {stripe_secret[:20]}...")
+    print("✅ STRIPE_SECRET_KEY: present (value not shown)")
 else:
     print("❌ STRIPE_SECRET_KEY not found")
 
