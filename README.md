@@ -318,6 +318,7 @@ This project follows a standardized release process with automated tooling:
 - **Container Images**: https://github.com/hartou/ireti-pos-light-ce/pkgs/container/ireti-pos-light-ce
 - **Latest Releases**: https://github.com/hartou/ireti-pos-light-ce/releases
 - **Issue Tracker**: https://github.com/hartou/ireti-pos-light-ce/issues
+- **Development Roadmap**: [ROADMAP.md](https://github.com/hartou/ireti-pos-light-ce/blob/main/docs/ROADMAP.md)
 - **Deployment Guide**: [DEPLOYMENT.md](https://github.com/hartou/ireti-pos-light-ce/blob/main/DEPLOYMENT.md)
 
 ---
