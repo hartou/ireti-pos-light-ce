@@ -8,3 +8,39 @@ __pycache__/
 *.pyd
 *.sqlite3
 .vscode/
+
+# Release and build artifacts
+release/
+*.tar.gz
+*.zip
+*.tmp
+
+# Development and testing files
+tests/
+docs/
+tools/
+scripts/
+playwright-report/
+test-results/
+coverage/
+
+# IDE and OS files
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node.js artifacts (not needed in production container)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+package-lock.json
+
+# Local configuration and logs
+*.log
+logs/
+.pytest_cache/
+
+# Development environment files
+.venv/
+venv/
+env/

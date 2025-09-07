@@ -64,3 +64,14 @@ tmp_*.html
 
 # Dependency directories
 jspm_packages/
+
+# Release artifacts and distribution files
+release/
+*.tar.gz
+*.zip
+release-*.tmp
+
+# Temporary files and build artifacts
+docker-context/
+.dockerignore.tmp
+*.tmp
