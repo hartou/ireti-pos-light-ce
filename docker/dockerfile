@@ -23,14 +23,15 @@ RUN apt-get update \
  	&& apt-get install -y --no-install-recommends gettext \
  	&& rm -rf /var/lib/apt/lists/* \
  	&& pip install --upgrade pip 
-RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install -r config/requirements.txt --no-cache-dir
 
 # Expose port 8000
 EXPOSE 8000
 
-# Compile translations if any exist, then collect static
+# Compile translations if any exist (this can run without env vars)
 RUN python manage.py compilemessages || true
-RUN python manage.py collectstatic --noinput
+
+# Note: collectstatic is moved to startup script since it requires environment variables
 
 # Please provide env varibales that are required to set up database configuration
 # Command to run migrations, ensure a superuser (if env vars provided), and start the server
@@ -55,6 +56,10 @@ echo "Might not work on those cases"
 
 # Show database configuration
 echo "Database configuration is set to \${DATABASE_ENGINE:-django.db.backends.sqlite3}"
+
+# Collect static files (now that environment variables are available)
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
 
 # Run migrations
 python manage.py makemigrations

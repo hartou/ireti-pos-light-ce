@@ -111,7 +111,7 @@ def retail_display(request,values=None):
             print(e)
             return HttpResponse("")
     
-    path="images4display/"  # insert the path to your directory   
+    path="assets/images4display/"  # insert the path to your directory   
     if os.path.exists(f"./{path}"):
         # print(f"{settings.STATIC_ROOT}/{path}")
         shutil.copytree(f"./{path}", f"{settings.STATIC_ROOT}/{path}", dirs_exist_ok=True)

@@ -11,7 +11,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=onlineretailpos.settings.development
+      - DJANGO_SETTINGS_MODULE=onlineretailpos.settings.devlopement
       - DJANGO_SECRET_KEY=dev-secret-key
       - DJANGO_DEBUG=True
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0

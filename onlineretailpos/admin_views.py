@@ -220,7 +220,7 @@ def admin_users(request):
 @staff_member_required
 def admin_transactions(request):
     """Transaction management within integrated UI"""
-    transactions_list = transaction.objects.all().order_by('-timestamp')
+    transactions_list = transaction.objects.all().order_by('-date_time')
     
     # Filter by transaction type (if field exists)
     trans_filter = request.GET.get('type', '')
@@ -232,13 +232,13 @@ def admin_transactions(request):
     date_filter = request.GET.get('date', '')
     if date_filter == 'today':
         today = datetime.now().date()
-        transactions_list = transactions_list.filter(timestamp__date=today)
+        transactions_list = transactions_list.filter(date_time__date=today)
     elif date_filter == 'week':
         week_ago = datetime.now().date() - timedelta(days=7)
-        transactions_list = transactions_list.filter(timestamp__date__gte=week_ago)
+        transactions_list = transactions_list.filter(date_time__date__gte=week_ago)
     elif date_filter == 'month':
         month_ago = datetime.now().date() - timedelta(days=30)
-        transactions_list = transactions_list.filter(timestamp__date__gte=month_ago)
+        transactions_list = transactions_list.filter(date_time__date__gte=month_ago)
     
     # Pagination
     paginator = Paginator(transactions_list, 25)
@@ -248,10 +248,10 @@ def admin_transactions(request):
     # Statistics
     total_transactions = transaction.objects.count()
     today_transactions = transaction.objects.filter(
-        timestamp__date=datetime.now().date()
+        date_time__date=datetime.now().date()
     ).count()
     total_revenue = transaction.objects.aggregate(
-        total=Sum('total')
+        total=Sum('total_sale')
     )['total'] or 0
     
     context = {
