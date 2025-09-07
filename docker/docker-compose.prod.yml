@@ -23,7 +23,7 @@ services:
     depends_on:
       - db
     environment:
-      - DJANGO_SETTINGS_MODULE=onlineretailpos.settings.production
+      - DJANGO_SETTINGS_MODULE=iretilightpos.settings.production
       - DATABASE_URL=postgres://${POSTGRES_USER:-iretiposlightuser}:${POSTGRES_PASSWORD:-securepassword123}@db:5432/${POSTGRES_DB:-iretiposlightdb}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-your-secret-key-here}
       - DJANGO_DEBUG=False

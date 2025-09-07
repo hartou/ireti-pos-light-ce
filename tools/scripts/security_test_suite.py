@@ -14,7 +14,7 @@ from datetime import datetime
 
 # Add Django setup
 sys.path.insert(0, '/workspaces/ireti-pos-light')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.base')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.base')
 
 import django
 django.setup()
@@ -247,7 +247,7 @@ class SecurityTestSuite:
         
         try:
             # Check production security settings
-            prod_settings_file = '/workspaces/ireti-pos-light/onlineretailpos/settings/production.py'
+            prod_settings_file = '/workspaces/ireti-pos-light/iretilightpos/settings/production.py'
             if os.path.exists(prod_settings_file):
                 with open(prod_settings_file, 'r') as f:
                     content = f.read()

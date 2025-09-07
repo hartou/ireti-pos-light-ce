@@ -7,7 +7,7 @@ This project is configured for Django i18n with a language switcher in the top n
 - French (`fr`)
 - Spanish (`es`)
 
-You can add more in `onlineretailpos/settings/base.py` under `LANGUAGES`.
+You can add more in `iretilightpos/settings/base.py` under `LANGUAGES`.
 
 ## Mark strings for translation
 Wrap user-facing strings in templates and Python with translation tags/functions, for example:

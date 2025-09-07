@@ -6,7 +6,7 @@ import os
 import sys
 import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.devlopement')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.devlopement')
 os.environ['DJANGO_TESTING'] = '1'
 try:
     django.setup()

@@ -289,7 +289,7 @@ ireti-pos-light-ce/
 ├── docs/              # Documentation and guides
 ├── inventory/         # Product and inventory management
 ├── locale/            # Internationalization files
-├── onlineretailpos/   # Main Django project settings
+├── iretilightpos/   # Main Django project settings
 │   ├── static/        # CSS, JavaScript, images
 │   ├── templates/     # HTML templates
 │   └── settings/      # Environment-specific settings

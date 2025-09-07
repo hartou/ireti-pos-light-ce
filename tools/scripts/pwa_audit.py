@@ -13,7 +13,7 @@ def check_manifest():
     """Check PWA manifest configuration"""
     print("📋 Checking PWA Manifest...")
     
-    manifest_path = Path("onlineretailpos/static/manifest.webmanifest")
+    manifest_path = Path("iretilightpos/static/manifest.webmanifest")
     if not manifest_path.exists():
         print("❌ Manifest file not found")
         return False
@@ -36,9 +36,9 @@ def check_manifest():
         
         # Check icon files exist
         for icon in manifest['icons']:
-            # Remove leading slash and prepend onlineretailpos/static
+            # Remove leading slash and prepend iretilightpos/static
             icon_path = icon['src'].lstrip('/')
-            full_icon_path = Path(f"onlineretailpos/{icon_path}")
+            full_icon_path = Path(f"iretilightpos/{icon_path}")
             if not full_icon_path.exists():
                 print(f"❌ Icon file not found: {icon['src']} (looked for {full_icon_path})")
                 return False
@@ -54,7 +54,7 @@ def check_service_worker():
     """Check service worker implementation"""
     print("\n🔧 Checking Service Worker...")
     
-    sw_path = Path("onlineretailpos/static/js/sw.js")
+    sw_path = Path("iretilightpos/static/js/sw.js")
     if not sw_path.exists():
         print("❌ Service worker file not found")
         return False
@@ -83,7 +83,7 @@ def check_base_template():
     """Check base template for PWA requirements"""
     print("\n📄 Checking Base Template...")
     
-    template_path = Path("onlineretailpos/templates/base.html")
+    template_path = Path("iretilightpos/templates/base.html")
     if not template_path.exists():
         print("❌ Base template not found")
         return False
@@ -114,7 +114,7 @@ def check_security_settings():
     """Check Django security settings for PWA"""
     print("\n🔒 Checking Security Settings...")
     
-    settings_path = Path("onlineretailpos/settings/base.py")
+    settings_path = Path("iretilightpos/settings/base.py")
     if not settings_path.exists():
         print("❌ Settings file not found")
         return False
@@ -143,8 +143,8 @@ def check_offline_page():
     
     # Check if offline template exists (common locations)
     offline_templates = [
-        "onlineretailpos/templates/offline.html",
-        "onlineretailpos/templates/registration/offline.html"
+        "iretilightpos/templates/offline.html",
+        "iretilightpos/templates/registration/offline.html"
     ]
     
     offline_exists = any(Path(template).exists() for template in offline_templates)
@@ -162,10 +162,10 @@ def check_static_files():
     
     # Check critical static files exist
     critical_files = [
-        "onlineretailpos/static/manifest.webmanifest",
-        "onlineretailpos/static/js/sw.js",
-        "onlineretailpos/static/img/icons/icon-192x192.png",
-        "onlineretailpos/static/img/icons/icon-512x512.png"
+        "iretilightpos/static/manifest.webmanifest",
+        "iretilightpos/static/js/sw.js",
+        "iretilightpos/static/img/icons/icon-192x192.png",
+        "iretilightpos/static/img/icons/icon-512x512.png"
     ]
     
     missing_files = [f for f in critical_files if not Path(f).exists()]

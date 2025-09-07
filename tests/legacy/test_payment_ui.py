@@ -14,7 +14,7 @@ import sys
 import django
 
 # Set environment variables
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.devlopement')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.devlopement')
 os.environ.setdefault('STRIPE_SECRET_KEY', 'sk_test_placeholder')
 os.environ.setdefault('STRIPE_PUBLISHABLE_KEY', 'pk_test_placeholder')
 os.environ.setdefault('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder')

@@ -11,72 +11,72 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: onlineretailpos/templates/base.html:38
+#: iretilightpos/templates/base.html:38
 msgid "Online Retail POS System"
 msgstr "Sistema POS Minorista en Línea"
 
-#: onlineretailpos/templates/base.html:59
+#: iretilightpos/templates/base.html:59
 msgid "Dashboards"
 msgstr "Paneles"
 
-#: onlineretailpos/templates/base.html:64
+#: iretilightpos/templates/base.html:64
 msgid "Sales Dashboard"
 msgstr "Panel de ventas"
 
-#: onlineretailpos/templates/base.html:65
+#: iretilightpos/templates/base.html:65
 msgid "Department Dashboard"
 msgstr "Panel de departamentos"
 
-#: onlineretailpos/templates/base.html:66
+#: iretilightpos/templates/base.html:66
 msgid "Products Dashboard"
 msgstr "Panel de productos"
 
-#: onlineretailpos/templates/base.html:72
-#: onlineretailpos/templates/base.html:79
+#: iretilightpos/templates/base.html:72
+#: iretilightpos/templates/base.html:79
 msgid "Register"
 msgstr "Caja"
 
-#: onlineretailpos/templates/base.html:84
+#: iretilightpos/templates/base.html:84
 msgid "Transactions"
 msgstr "Transacciones"
 
-#: onlineretailpos/templates/base.html:88
+#: iretilightpos/templates/base.html:88
 msgid "Customer Screen"
 msgstr "Pantalla del cliente"
 
-#: onlineretailpos/templates/base.html:95
+#: iretilightpos/templates/base.html:95
 msgid "Other"
 msgstr "Otros"
 
-#: onlineretailpos/templates/base.html:100
+#: iretilightpos/templates/base.html:100
 msgid "Price Lookup"
 msgstr "Búsqueda de precios"
 
-#: onlineretailpos/templates/base.html:104
+#: iretilightpos/templates/base.html:104
 msgid "Add Inventory"
 msgstr "Añadir inventario"
 
-#: onlineretailpos/templates/base.html:112
+#: iretilightpos/templates/base.html:112
 msgid "Staff"
 msgstr "Personal"
 
-#: onlineretailpos/templates/base.html:117
+#: iretilightpos/templates/base.html:117
 msgid "Data Administration"
 msgstr "Administración de datos"
 
-#: onlineretailpos/templates/base.html:130
+#: iretilightpos/templates/base.html:130
 msgid "Hello,"
 msgstr "Hola,"
 
-#: onlineretailpos/templates/base.html:135
+#: iretilightpos/templates/base.html:135
 msgid "Change Password"
 msgstr "Cambiar contraseña"
 
-#: onlineretailpos/templates/base.html:140
+#: iretilightpos/templates/base.html:140
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: onlineretailpos/templates/retailScreen.html
+#: iretilightpos/templates/retailScreen.html
 msgid "Submit"
 msgstr "Enviar"
 msgid "Transaction Info"
@@ -140,215 +140,215 @@ msgstr "Por favor ingrese el monto..."
 msgid "Variable Amount..."
 msgstr "Monto variable..."
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Barcode Not Found..."
 msgstr "Código de barras no encontrado..."
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Please Ask Supervisor to add this Product"
 msgstr "Por favor, pida al supervisor que agregue este producto"
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Please do not refresh this page, as it would add quantity again to same product"
 msgstr "Por favor, no actualice esta página, ya que volvería a agregar la cantidad al mismo producto"
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Inventory Quantity Updated - %(barcode)s"
 msgstr "Cantidad de inventario actualizada - %(barcode)s"
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Previous Inventory Qty"
 msgstr "Cantidad de inventario anterior"
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Added Inventory Qty"
 msgstr "Cantidad de inventario añadida"
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Total Current Inventory Qty"
 msgstr "Cantidad total actual de inventario"
 
-#: onlineretailpos/templates/addInventory.html
+#: iretilightpos/templates/addInventory.html
 msgid "Product Information - %(barcode)s"
 msgstr "Información del producto - %(barcode)s"
 
-#: onlineretailpos/templates/productLookup.html
+#: iretilightpos/templates/productLookup.html
 msgid "NO PRODUCT FOUND"
 msgstr "PRODUCTO NO ENCONTRADO"
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Top Best-Seller Products"
 msgstr "Productos más vendidos"
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Top %(number)s Best Seller for Each Department.<br> Scroll to View...."
 msgstr "Top %(number)s más vendidos para cada departamento.<br> Desplázate para ver...."
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Low Inventory Products"
 msgstr "Productos con bajo inventario"
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Top 50 Products that are low in inventory or is quantity is wrong. Please take a look into it."
 msgstr "Top 50 de productos que tienen bajo inventario o la cantidad es incorrecta. Por favor, revísalo."
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Out of Stock Inventory Items"
 msgstr "Artículos de inventario agotados"
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Name"
 msgstr "Nombre"
 
-#: onlineretailpos/templates/productsDashboard.html
+#: iretilightpos/templates/productsDashboard.html
 msgid "Qty Sold"
 msgstr "Cantidad vendida"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Today's Sales"
 msgstr "Ventas de hoy"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Yesterday Sales"
 msgstr "Ventas de ayer"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "This Month"
 msgstr "Este mes"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Total Transaction"
 msgstr "Transacción total"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Daily Sales"
 msgstr "Ventas diarias"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Weekly Total"
 msgstr "Total semanal"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Sales by Hour"
 msgstr "Ventas por hora"
 
-#: onlineretailpos/templates/salesDashboard.html
+#: iretilightpos/templates/salesDashboard.html
 msgid "Sales by Department"
 msgstr "Ventas por departamento"
 
-#: onlineretailpos/templates/departmentDashboard.html
+#: iretilightpos/templates/departmentDashboard.html
 msgid "Department Report"
 msgstr "Informe de departamento"
 
-#: onlineretailpos/templates/departmentDashboard.html
+#: iretilightpos/templates/departmentDashboard.html
 msgid "Generate Report"
 msgstr "Generar informe"
 
-#: onlineretailpos/templates/transactions.html
+#: iretilightpos/templates/transactions.html
 msgid "Filter by Date"
 msgstr "Filtrar por fecha"
 
-#: onlineretailpos/templates/transactions.html
+#: iretilightpos/templates/transactions.html
 msgid "Export to Excel"
 msgstr "Exportar a Excel"
 
-#: onlineretailpos/templates/transactions.html
+#: iretilightpos/templates/transactions.html
 msgid "Transaction ID"
 msgstr "ID de transacción"
 
-#: onlineretailpos/templates/transactions.html
+#: iretilightpos/templates/transactions.html
 msgid "Customer"
 msgstr "Cliente"
 
-#: onlineretailpos/templates/transactions.html
+#: iretilightpos/templates/transactions.html
 msgid "View Details"
 msgstr "Ver detalles"
 
-#: onlineretailpos/templates/reportsRegular.html
+#: iretilightpos/templates/reportsRegular.html
 msgid "Regular Reports"
 msgstr "Informes regulares"
 
-#: onlineretailpos/templates/reportsRegular.html
+#: iretilightpos/templates/reportsRegular.html
 msgid "Generate Standard Reports"
 msgstr "Generar informes estándar"
 
-#: onlineretailpos/templates/recallTransaction.html
+#: iretilightpos/templates/recallTransaction.html
 msgid "*IDs are generated every time when Transactions are Suspended.<br>If you Recall and Suspend a Transaction then it will be on top again."
 msgstr "*Los IDs se generan cada vez que se suspenden las transacciones.<br>Si recuerdas y suspendes una transacción, estará en la parte superior nuevamente."
 
-#: onlineretailpos/templates/recallTransaction.html
+#: iretilightpos/templates/recallTransaction.html
 msgid "Back to Register"
 msgstr "Volver a la caja"
 
-#: onlineretailpos/templates/recallTransaction.html
+#: iretilightpos/templates/recallTransaction.html
 msgid "Date and Time"
 msgstr "Fecha y hora"
 
-#: onlineretailpos/templates/recallTransaction.html
+#: iretilightpos/templates/recallTransaction.html
 msgid "Total Amount"
 msgstr "Monto total"
 
-#: onlineretailpos/templates/recallTransaction.html
+#: iretilightpos/templates/recallTransaction.html
 msgid "Item Count"
 msgstr "Cantidad de artículos"
 
-#: onlineretailpos/templates/endTransaction.html
+#: iretilightpos/templates/endTransaction.html
 msgid "Complete Checkout"
 msgstr "Completar pago"
 
-#: onlineretailpos/templates/endTransaction.html
+#: iretilightpos/templates/endTransaction.html
 msgid "Payment Method"
 msgstr "Método de pago"
 
-#: onlineretailpos/templates/endTransaction.html
+#: iretilightpos/templates/endTransaction.html
 msgid "Amount Received"
 msgstr "Monto recibido"
 
-#: onlineretailpos/templates/receiptView.html
+#: iretilightpos/templates/receiptView.html
 msgid "Print Receipt"
 msgstr "Imprimir recibo"
 
-#: onlineretailpos/templates/receiptView.html
+#: iretilightpos/templates/receiptView.html
 msgid "Thank you for your purchase!"
 msgstr "¡Gracias por su compra!"
 
-#: onlineretailpos/templates/retailDisplay.html
+#: iretilightpos/templates/retailDisplay.html
 msgid "Customer Display"
 msgstr "Pantalla del cliente"
 
-#: onlineretailpos/templates/retailDisplay.html
+#: iretilightpos/templates/retailDisplay.html
 msgid "Welcome to our store!"
 msgstr "¡Bienvenido a nuestra tienda!"
 
-#: onlineretailpos/templates/retailDisplay.html
+#: iretilightpos/templates/retailDisplay.html
 msgid "Please wait while we process your order"
 msgstr "Por favor espere mientras procesamos su pedido"
 
-#: onlineretailpos/templates/registration/login.html
+#: iretilightpos/templates/registration/login.html
 msgid "Online retail Pos system - %(store_name)s"
 msgstr "Sistema POS de venta en línea - %(store_name)s"
 
-#: onlineretailpos/templates/registration/login.html
+#: iretilightpos/templates/registration/login.html
 msgid "Successfully Logged Out!!!"
 msgstr "¡¡¡Sesión cerrada exitosamente!!!"
 
-#: onlineretailpos/templates/registration/login.html
+#: iretilightpos/templates/registration/login.html
 msgid "Log-In Error, Please enter correct credential!!!"
 msgstr "Error de inicio de sesión, ¡¡¡por favor ingrese las credenciales correctas!!!"
 
-#: onlineretailpos/templates/registration/login.html
+#: iretilightpos/templates/registration/login.html
 msgid "Please Enter Username..."
 msgstr "Por favor ingrese el nombre de usuario..."
 
-#: onlineretailpos/templates/registration/login.html
+#: iretilightpos/templates/registration/login.html
 msgid "Enter Your Password..."
 msgstr "Ingrese su contraseña..."
 
-#: onlineretailpos/templates/registration/change_password.html
+#: iretilightpos/templates/registration/change_password.html
 msgid "Change Password Page"
 msgstr "Página de cambio de contraseña"
 
-#: onlineretailpos/templates/registration/change_password.html
+#: iretilightpos/templates/registration/change_password.html
 msgid "Update Password!"
 msgstr "¡Actualizar contraseña!"
 

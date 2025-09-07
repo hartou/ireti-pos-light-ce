@@ -10,7 +10,7 @@ from decimal import Decimal
 import django
 
 # Set up Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings')
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 django.setup()
 

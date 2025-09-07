@@ -322,11 +322,11 @@ docker inspect pos-postgres-container | grep Health
 ```bash
 # Check database integrity
 docker exec -it pos-postgres-container \
-  psql -U DBUSER -d OnlineRetailPOS -c "SELECT pg_database_size('OnlineRetailPOS');"
+  psql -U DBUSER -d IretiLightPOS -c "SELECT pg_database_size('IretiLightPOS');"
 
 # Repair if needed (backup first!)
 docker exec -it pos-postgres-container \
-  pg_dump -U DBUSER OnlineRetailPOS > backup.sql
+  pg_dump -U DBUSER IretiLightPOS > backup.sql
 ```
 
 ## Advanced Troubleshooting
@@ -533,7 +533,7 @@ python manage.py check_webhook_status
 **Recovery Steps**
 ```bash
 # Backup current state
-pg_dump -U DBUSER OnlineRetailPOS > corrupted_backup.sql
+pg_dump -U DBUSER IretiLightPOS > corrupted_backup.sql
 
 # Restore from last known good backup
 restore_database_backup.sh

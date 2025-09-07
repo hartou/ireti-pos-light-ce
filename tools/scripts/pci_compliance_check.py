@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 
 # Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.base')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.base')
 sys.path.insert(0, str(Path(__file__).parent.parent))
 django.setup()
 
@@ -139,7 +139,7 @@ class PCIComplianceChecker:
         print("\n🔒 Checking HTTPS enforcement...")
         
         # Check production settings file directly since Django settings might be development
-        prod_settings_path = './onlineretailpos/settings/production.py'
+        prod_settings_path = './iretilightpos/settings/production.py'
         if os.path.exists(prod_settings_path):
             try:
                 with open(prod_settings_path, 'r') as f:

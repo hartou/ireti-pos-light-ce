@@ -6,13 +6,13 @@ services:
     environment: #Will Get this values from .env file in directory
       POSTGRES_USER: DBUSER
       POSTGRES_PASSWORD: DBPASS
-      POSTGRES_DB: "OnlineRetailPOS"
+      POSTGRES_DB: "IretiLightPOS"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data  # Mount volume for PostgreSQL data
     ports:
       - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U DBUSER -d OnlineRetailPOS -h localhost"]
+      test: ["CMD-SHELL", "pg_isready -U DBUSER -d IretiLightPOS -h localhost"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -20,7 +20,7 @@ services:
 
   migrate:
     container_name: pos-django-migrate
-    image: onlineretailpos
+    image: iretilightpos
     build:
       context: ..
       dockerfile: docker/dockerfile
@@ -29,12 +29,12 @@ services:
         STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
         STRIPE_WEBHOOK_ENDPOINT_SECRET: ${STRIPE_WEBHOOK_ENDPOINT_SECRET}
     volumes:
-      - .:/OnlineRetailPOS  # Mount project into container WORKDIR for live development
+      - .:/IretiLightPOS  # Mount project into container WORKDIR for live development
     environment:
       SECRET_KEY_DEV: 'default-*fejw5!9md7cy9m-)*qw7w3$=%9$-9uyqn(k1smw*c'
       NAME_OF_DATABASE: 'postgres'
       DB_HOST: postgresdb
-      DB_NAME: "OnlineRetailPOS"
+      DB_NAME: "IretiLightPOS"
       DB_USERNAME: DBUSER
       DB_PASSWORD: DBPASS
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
@@ -59,7 +59,7 @@ services:
 
   webapp:
     container_name: pos-django-webapp-container
-    image: onlineretailpos
+    image: iretilightpos
     build: 
       context: ..
       dockerfile: docker/dockerfile
@@ -70,12 +70,12 @@ services:
     ports:
       - '8000:8000'
     volumes:
-      - .:/OnlineRetailPOS  # Mount project into container WORKDIR for live development
+      - .:/IretiLightPOS  # Mount project into container WORKDIR for live development
     environment:
       SECRET_KEY_DEV: 'default-*fejw5!9md7cy9m-)*qw7w3$=%9$-9uyqn(k1smw*c'  # Change This 
       NAME_OF_DATABASE: 'postgres' # Set to postgres if using Postgres DB from docker image, ops avail: sqlite, postgres, mysql 
       DB_HOST: postgresdb
-      DB_NAME: "OnlineRetailPOS" 
+      DB_NAME: "IretiLightPOS" 
       DB_USERNAME: DBUSER
       DB_PASSWORD: DBPASS
       DJANGO_SUPERUSER_USERNAME: admin

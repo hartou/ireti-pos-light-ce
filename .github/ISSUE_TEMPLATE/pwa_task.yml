@@ -20,7 +20,7 @@ body:
     id: path
     attributes:
       label: Path/Component
-      placeholder: onlineretailpos/static/manifest.webmanifest
+      placeholder: iretilightpos/static/manifest.webmanifest
     validations:
       required: true
   - type: input

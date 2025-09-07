@@ -38,7 +38,7 @@ validate_service_worker() {
     echo -e "${YELLOW}⏳ Validating Service Worker...${NC}"
     
     # Check if SW file exists
-    if [ -f "onlineretailpos/static/js/sw.js" ]; then
+    if [ -f "iretilightpos/static/js/sw.js" ]; then
         echo -e "${GREEN}✅ Service Worker file exists${NC}"
     else
         echo -e "${RED}❌ Service Worker file missing${NC}"
@@ -46,7 +46,7 @@ validate_service_worker() {
     fi
     
     # Check SW registration in base template
-    if grep -q "navigator.serviceWorker.register" onlineretailpos/templates/base.html; then
+    if grep -q "navigator.serviceWorker.register" iretilightpos/templates/base.html; then
         echo -e "${GREEN}✅ Service Worker registration found in base template${NC}"
     else
         echo -e "${RED}❌ Service Worker registration missing${NC}"
@@ -67,7 +67,7 @@ validate_manifest() {
     echo -e "${YELLOW}⏳ Validating PWA Manifest...${NC}"
     
     # Check if manifest file exists
-    if [ -f "onlineretailpos/static/manifest.webmanifest" ]; then
+    if [ -f "iretilightpos/static/manifest.webmanifest" ]; then
         echo -e "${GREEN}✅ Manifest file exists${NC}"
     else
         echo -e "${RED}❌ Manifest file missing${NC}"
@@ -75,7 +75,7 @@ validate_manifest() {
     fi
     
     # Check manifest link in base template
-    if grep -q "manifest.webmanifest" onlineretailpos/templates/base.html; then
+    if grep -q "manifest.webmanifest" iretilightpos/templates/base.html; then
         echo -e "${GREEN}✅ Manifest linked in base template${NC}"
     else
         echo -e "${RED}❌ Manifest link missing${NC}"
@@ -100,7 +100,7 @@ validate_pwa_story() {
     case $story_id in
         "PWA-004")
             echo "Checking static assets caching..."
-            if grep -q "STATIC_CACHE\|static.*cache\|cache-first" onlineretailpos/static/js/sw.js; then
+            if grep -q "STATIC_CACHE\|static.*cache\|cache-first" iretilightpos/static/js/sw.js; then
                 echo -e "${GREEN}✅ PWA-004: Static assets caching implemented${NC}"
             else
                 echo -e "${RED}❌ PWA-004: Static assets caching not found${NC}"
@@ -109,7 +109,7 @@ validate_pwa_story() {
             ;;
         "PWA-005")
             echo "Checking API caching..."
-            if grep -q "API_CACHE\|api.*cache\|stale-while-revalidate\|handleAPIRequest" onlineretailpos/static/js/sw.js; then
+            if grep -q "API_CACHE\|api.*cache\|stale-while-revalidate\|handleAPIRequest" iretilightpos/static/js/sw.js; then
                 echo -e "${GREEN}✅ PWA-005: API caching implemented${NC}"
             else
                 echo -e "${RED}❌ PWA-005: API caching not found${NC}"
@@ -118,7 +118,7 @@ validate_pwa_story() {
             ;;
         "PWA-007")
             echo "Checking network status UI..."
-            if grep -q "network.*indicator\|network.*status\|navigator\.onLine" onlineretailpos/templates/base.html; then
+            if grep -q "network.*indicator\|network.*status\|navigator\.onLine" iretilightpos/templates/base.html; then
                 echo -e "${GREEN}✅ PWA-007: Network status UI implemented${NC}"
             else
                 echo -e "${RED}❌ PWA-007: Network status UI not found${NC}"
@@ -127,7 +127,7 @@ validate_pwa_story() {
             ;;
         "PWA-012")
             echo "Checking iOS PWA support..."
-            if grep -q "apple-touch-icon\|apple-mobile-web-app" onlineretailpos/templates/base.html; then
+            if grep -q "apple-touch-icon\|apple-mobile-web-app" iretilightpos/templates/base.html; then
                 echo -e "${GREEN}✅ PWA-012: iOS PWA support implemented${NC}"
             else
                 echo -e "${RED}❌ PWA-012: iOS PWA support not found${NC}"
@@ -136,7 +136,7 @@ validate_pwa_story() {
             ;;
         "PWA-014")
             echo "Checking security headers..."
-            if grep -q "CSP_\|SECURE_\|SERVICE_WORKER_ALLOWED" onlineretailpos/settings/base.py; then
+            if grep -q "CSP_\|SECURE_\|SERVICE_WORKER_ALLOWED" iretilightpos/settings/base.py; then
                 echo -e "${GREEN}✅ PWA-014: Security headers implemented${NC}"
             else
                 echo -e "${RED}❌ PWA-014: Security headers not found${NC}"
@@ -154,7 +154,7 @@ validate_pwa_story() {
             ;;
         "PWA-016")
             echo "Checking SW update flow..."
-            if grep -q "UPDATE_AVAILABLE\|pwa-update-btn\|handleUpdateClick" onlineretailpos/static/js/sw.js onlineretailpos/templates/base.html; then
+            if grep -q "UPDATE_AVAILABLE\|pwa-update-btn\|handleUpdateClick" iretilightpos/static/js/sw.js iretilightpos/templates/base.html; then
                 echo -e "${GREEN}✅ PWA-016: SW update flow implemented${NC}"
             else
                 echo -e "${RED}❌ PWA-016: SW update flow not found${NC}"

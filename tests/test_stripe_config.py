@@ -12,7 +12,7 @@ import django
 sys.path.insert(0, '/workspaces/ireti-pos-light')
 
 # Set up Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.devlopement')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.devlopement')
 django.setup()
 
 import stripe

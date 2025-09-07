@@ -15,7 +15,7 @@ from pathlib import Path
 
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.devlopement')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.devlopement')
 os.environ['DJANGO_TESTING'] = '1'
 
 try:

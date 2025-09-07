@@ -1,19 +1,57 @@
 # Exclude local data and development artifacts from the image build context
-postgres_data/
-.env
+
+# Git and version control
 .git/
+.gitignore
+.gitattributes
+
+# Environment and configuration files
+.env
+.env.*
+!.env.example
+!.env.sample
+*.local
+
+# Database files
+postgres_data/
+*.sqlite3
+*.db
+db.sqlite3-journal
+
+# Python cache and bytecode
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.sqlite3
+.Python
+.pytest_cache/
+.coverage
+.mypy_cache/
+.tox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env/
+
+# IDE and editor files
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
 
 # Release and build artifacts
 release/
 *.tar.gz
 *.zip
 *.tmp
+dist/
+build/
+*.egg-info/
 
 # Development and testing files
 tests/
@@ -23,24 +61,60 @@ scripts/
 playwright-report/
 test-results/
 coverage/
+htmlcov/
 
-# IDE and OS files
-.idea/
+# OS files
 .DS_Store
 Thumbs.db
+.Spotlight-V100
+.Trashes
 
 # Node.js artifacts (not needed in production container)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 package-lock.json
+yarn.lock
+.npm
+.yarn-integrity
 
-# Local configuration and logs
+# Logs and runtime data
 *.log
 logs/
-.pytest_cache/
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Development environment files
-.venv/
-venv/
-env/
+# Security files
+*.key
+*.pem
+*.p12
+*.pfx
+.secrets
+secrets/
+
+# Django specific development files
+local_settings.py
+media/
+staticfiles/
+
+# Backup and temporary files
+*.bak
+*.backup
+*.orig
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Local development files
+.local/
+.cache/

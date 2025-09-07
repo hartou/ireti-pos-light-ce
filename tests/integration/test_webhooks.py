@@ -11,7 +11,7 @@ import hmac
 import time
 
 # Set up Django environment for integration tests
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings')
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import django

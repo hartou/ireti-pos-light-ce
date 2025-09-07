@@ -2,9 +2,9 @@
 FROM python:3.8   
 
 # Set the working directory  
-WORKDIR /OnlineRetailPOS
+WORKDIR /IretiLightPOS
 
-COPY . /OnlineRetailPOS/
+COPY . /IretiLightPOS/
 
 # Set environment variables  
 ENV PYTHONDONTWRITEBYTECODE=1

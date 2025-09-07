@@ -11,5 +11,5 @@ class MyAdminSite(admin.AdminSite):
 
 
 class MyAdminConfig(AdminConfig):
-    default_site = 'onlineretailpos.admin.MyAdminSite'
+    default_site = 'iretilightpos.admin.MyAdminSite'
 

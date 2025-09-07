@@ -25,7 +25,7 @@ database_dict = {
         } ,
     'postgres' : {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', "OnlineRetailPOS"),  # Use environment variable DB_NAME, defaulting to 'default_db_name'
+            'NAME': os.getenv('DB_NAME', "IretiLightPOS"),  # Use environment variable DB_NAME, defaulting to 'default_db_name'
             'USER': os.getenv('DB_USERNAME'),  # Use environment variable DB_USERNAME
             'PASSWORD': os.getenv('DB_PASSWORD'),  # Use environment variable DB_PASSWORD
             'HOST': os.getenv('DB_HOST', "localhost"),  # Use environment variable DB_HOST
@@ -33,7 +33,7 @@ database_dict = {
         } ,
     'mysql': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('DB_NAME', "OnlineRetailPOS"),  # Use environment variable DB_NAME
+            'NAME': os.getenv('DB_NAME', "IretiLightPOS"),  # Use environment variable DB_NAME
             'USER': os.getenv('DB_USERNAME'),  # Use environment variable DB_USERNAME
             'PASSWORD': os.getenv('DB_PASSWORD'),  # Use environment variable DB_PASSWORD
             'HOST': os.getenv('DB_HOST', "localhost"),  # Use environment variable DB_HOST

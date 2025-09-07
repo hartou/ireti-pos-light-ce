@@ -1,5 +1,9 @@
 # Environment files
 .env
+.env.local
+.env.development
+.env.test
+.env.production
 !.env.sample
 !.env.example
 
@@ -15,17 +19,44 @@ Thumbs.db
 # Database files
 *.sqlite
 *.sqlite3
+*.db
 postgres_data/
+db.sqlite3
 
 # Python
 *.pyc
+*.pyo
+*.pyd
 __pycache__
 __pycache__/
+*.so
+.Python
+.python-version
 venv/
 env/
+.venv/
+.env/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
+.coverage
+.tox/
+.cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Django specific
+*.log
+local_settings.py
+media/
+staticfiles/
+/static/
+/media/
+db.sqlite3-journal
+celerybeat-schedule
+celerybeat.pid
 
 # Node.js
 node_modules/
@@ -35,6 +66,7 @@ yarn-error.log*
 .npm
 .yarn-integrity
 package-lock.json
+yarn.lock
 
 # IDE and editor files
 .vscode/
@@ -42,10 +74,14 @@ package-lock.json
 *.swp
 *.swo
 *~
+.project
+.pydevproject
 
 # Logs
 logs/
 *.log
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Runtime data
 pids
@@ -55,12 +91,15 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+.coverage
+htmlcov/
 
 # Test artifacts and reports
 playwright-report/
 test-results/
 *.spec.js
 tmp_*.html
+.pytest_cache/
 
 # Dependency directories
 jspm_packages/
@@ -75,3 +114,36 @@ release-*.tmp
 docker-context/
 .dockerignore.tmp
 *.tmp
+
+# Security and sensitive files
+.secrets
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Backup files
+*.bak
+*.backup
+*.swp
+*.orig
+
+# Local development files
+.local/
+.cache/
+
+# Documentation build files
+docs/_build/
+docs/.doctrees/
+
+# Internationalization
+*.mo
+*.pot
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Docker
+.docker/
+docker-compose.override.yml

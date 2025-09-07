@@ -169,7 +169,7 @@ if __name__ == '__main__':
     from django.test.utils import get_runner
     
     if not settings.configured:
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.local')
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.local')
         django.setup()
     
     # Run test

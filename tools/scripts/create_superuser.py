@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('SETTINGS', 'onlineretailpos.settings.devlopement'))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('SETTINGS', 'iretilightpos.settings.devlopement'))
 
 try:
     import django

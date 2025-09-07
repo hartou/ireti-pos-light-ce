@@ -23,7 +23,7 @@ body:
     attributes:
       label: Path
       description: Path to the template in the repo
-      placeholder: onlineretailpos/templates/addInventory.html
+      placeholder: iretilightpos/templates/addInventory.html
     validations:
       required: true
   - type: input

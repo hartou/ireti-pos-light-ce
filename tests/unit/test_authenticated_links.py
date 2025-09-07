@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 import sys
 
 # Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'onlineretailpos.settings.devlopement')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.devlopement')
 django.setup()
 
 def test_authenticated_access():
