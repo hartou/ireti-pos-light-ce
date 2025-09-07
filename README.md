@@ -73,7 +73,20 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Using Pre-built Docker Image (Recommended)
+### Option 1: One-Command Setup (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/hartou/ireti-pos-light-ce.git
+cd ireti-pos-light-ce
+
+# Run the setup script
+./setup.sh
+```
+
+The setup script will guide you through choosing development or production setup and configure everything automatically.
+
+### Option 2: Using Pre-built Docker Image
 
 ```bash
 # Pull the latest CE image from GitHub Container Registry
@@ -103,15 +116,15 @@ git clone https://github.com/hartou/ireti-pos-light.git
 cd ireti-pos-light
 
 # Download production configuration
-curl -O https://github.com/hartou/ireti-pos-light/releases/latest/download/docker-compose.prod.yml
-curl -O https://github.com/hartou/ireti-pos-light/releases/latest/download/.env.example
+curl -O https://github.com/hartou/ireti-pos-light-ce/releases/latest/download/docker-compose.prod.yml
+curl -O https://github.com/hartou/ireti-pos-light-ce/releases/latest/download/.env.example
 
 # Configure your environment
-cp .env.example .env
+cp config/.env.example .env
 # Edit .env with your database credentials and settings
 
 # Start with PostgreSQL and Nginx
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker/docker-compose.prod.yml up -d
 ```
 
 ### Option 3: Development Setup
@@ -122,7 +135,7 @@ git clone https://github.com/hartou/ireti-pos-light-ce.git
 cd ireti-pos-light-ce
 
 # Install Python dependencies
-pip install -r requirements.txt
+pip install -r config/requirements.txt
 
 # Run database migrations
 python manage.py migrate
@@ -173,7 +186,7 @@ docker pull ghcr.io/hartou/ireti-pos-light-ce:1.0.0
 
 #### **Production (PostgreSQL)**
 - Recommended for production deployments
-- Use the provided `docker-compose.prod.yml`
+- Use the provided `docker/docker-compose.prod.yml`
 - Includes database backups and persistent volumes
 
 ```yaml
@@ -268,16 +281,28 @@ See our [Deployment Guide](https://github.com/hartou/ireti-pos-light/blob/main/D
 
 ### **Project Structure**
 ```
-ireti-pos-light/
+ireti-pos-light-ce/
+├── assets/            # Screenshots and display images
 ├── cart/              # Shopping cart functionality
+├── config/            # Configuration files (requirements.txt, package.json, etc.)
+├── docker/            # Docker configuration files
+├── docs/              # Documentation and guides
 ├── inventory/         # Product and inventory management
-├── transaction/       # Sales transaction processing
+├── locale/            # Internationalization files
 ├── onlineretailpos/   # Main Django project settings
 │   ├── static/        # CSS, JavaScript, images
 │   ├── templates/     # HTML templates
 │   └── settings/      # Environment-specific settings
-├── screenshots/       # Application screenshots
-└── docker-compose.yml # Development Docker setup
+├── payments/          # Payment processing (Stripe integration)
+├── release-notes/     # Release documentation
+├── static/            # Collected static files
+├── tests/             # Test files
+├── tools/             # Utility scripts and testing tools
+│   ├── scripts/       # Utility scripts
+│   ├── validation-scripts/ # Validation tools
+│   └── playwright/    # End-to-end testing
+├── transaction/       # Sales transaction processing
+└── docker-compose.yml # Quick development setup
 ```
 
 ### **Contributing**

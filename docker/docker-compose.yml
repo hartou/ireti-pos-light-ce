@@ -1,0 +1,99 @@
+# Make sure you have .env file for variables to access as well
+services:
+  postgresdb:
+    image: postgres:latest
+    container_name: pos-postgres-container
+    environment: #Will Get this values from .env file in directory
+      POSTGRES_USER: DBUSER
+      POSTGRES_PASSWORD: DBPASS
+      POSTGRES_DB: "OnlineRetailPOS"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data  # Mount volume for PostgreSQL data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U DBUSER -d OnlineRetailPOS -h localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  migrate:
+    container_name: pos-django-migrate
+    image: onlineretailpos
+    build:
+      context: ..
+      dockerfile: docker/dockerfile
+      args:
+        STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+        STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+        STRIPE_WEBHOOK_ENDPOINT_SECRET: ${STRIPE_WEBHOOK_ENDPOINT_SECRET}
+    volumes:
+      - .:/OnlineRetailPOS  # Mount project into container WORKDIR for live development
+    environment:
+      SECRET_KEY_DEV: 'default-*fejw5!9md7cy9m-)*qw7w3$=%9$-9uyqn(k1smw*c'
+      NAME_OF_DATABASE: 'postgres'
+      DB_HOST: postgresdb
+      DB_NAME: "OnlineRetailPOS"
+      DB_USERNAME: DBUSER
+      DB_PASSWORD: DBPASS
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-Admin123!}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+      # Stripe Configuration
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_ENDPOINT_SECRET: ${STRIPE_WEBHOOK_ENDPOINT_SECRET:-}
+    env_file:
+      - path: /.env
+        required: false
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    restart: "no"
+    command: >
+      sh -c "python manage.py makemigrations && \
+      python manage.py migrate && \
+      python scripts/create_superuser.py && \
+      python manage.py load_demo_data --if-empty"
+
+  webapp:
+    container_name: pos-django-webapp-container
+    image: onlineretailpos
+    build: 
+      context: ..
+      dockerfile: docker/dockerfile
+      args:
+        STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+        STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+        STRIPE_WEBHOOK_ENDPOINT_SECRET: ${STRIPE_WEBHOOK_ENDPOINT_SECRET}
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/OnlineRetailPOS  # Mount project into container WORKDIR for live development
+    environment:
+      SECRET_KEY_DEV: 'default-*fejw5!9md7cy9m-)*qw7w3$=%9$-9uyqn(k1smw*c'  # Change This 
+      NAME_OF_DATABASE: 'postgres' # Set to postgres if using Postgres DB from docker image, ops avail: sqlite, postgres, mysql 
+      DB_HOST: postgresdb
+      DB_NAME: "OnlineRetailPOS" 
+      DB_USERNAME: DBUSER
+      DB_PASSWORD: DBPASS
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: Admin123!
+      # Stripe Configuration
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_ENDPOINT_SECRET: ${STRIPE_WEBHOOK_ENDPOINT_SECRET:-}
+    # If you are not providing .env file just add 
+    env_file: # Map here .env file if you are providing .env for the variables needed
+      - path: /.env
+        required: false
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+
+# Run with docker compose up with provinding DBUSER, DBPASS and SecretKey(Optnl). 
+# You can also pass in .env file just create. env file in directory
+# If you run into error just cancel and run docker compose up, it may error out in build or docker compose up just rerun the command
+# I think it is due to  connection error between postgres and webapp.
