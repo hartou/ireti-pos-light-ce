@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="1.0.0-CE"
+VERSION="1.1.0-CE"
 RELEASE_DIR="release/v${VERSION}"
 DOCKER_IMAGE="ghcr.io/hartou/ireti-pos-light-ce"
 

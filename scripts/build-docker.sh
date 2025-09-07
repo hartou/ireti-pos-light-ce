@@ -4,7 +4,7 @@
 set -e
 
 IMAGE_NAME="ghcr.io/hartou/ireti-pos-light-ce"
-VERSION="1.0.0-CE"
+VERSION="1.1.0-CE"
 FULL_TAG="${IMAGE_NAME}:${VERSION}"
 
 echo "🐳 Building Docker container for Ireti POS Light CE v${VERSION}"
