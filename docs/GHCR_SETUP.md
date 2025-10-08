@@ -45,12 +45,27 @@ Once the package is public, anyone can use:
 # Pull the latest image
 docker pull ghcr.io/hartou/ireti-pos-light-ce:latest
 
-# Run the container
-docker run -p 8000:8000 -e DJANGO_SUPERUSER_USERNAME=admin -e DJANGO_SUPERUSER_PASSWORD=admin123 ghcr.io/hartou/ireti-pos-light-ce:latest
+# Run the container (STRIPE KEYS ARE REQUIRED!)
+docker run -p 8000:8000 \
+  -e STRIPE_SECRET_KEY=sk_test_your_actual_key \
+  -e STRIPE_PUBLISHABLE_KEY=pk_test_your_actual_key \
+  -e STRIPE_WEBHOOK_ENDPOINT_SECRET=whsec_your_webhook_secret \
+  -e DJANGO_SUPERUSER_USERNAME=admin \
+  -e DJANGO_SUPERUSER_PASSWORD=Admin123! \
+  -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
+  ghcr.io/hartou/ireti-pos-light-ce:latest
 
 # Access the application
 open http://localhost:8000
 ```
+
+⚠️ **IMPORTANT**: The container requires valid Stripe API keys to start. Without them, the application will fail with:
+
+```text
+ValueError: STRIPE_SECRET_KEY environment variable is required
+```
+
+Get your Stripe test keys from: <https://dashboard.stripe.com/test/apikeys>
 
 ## 🔄 Automatic Builds
 
