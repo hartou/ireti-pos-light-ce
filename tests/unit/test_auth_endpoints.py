@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Test for authentication API endpoints
 Tests both /auth/login/ and /api/v1/auth/login/ endpoints
@@ -10,7 +10,7 @@ import json
 import django
 
 # Set up Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iretilightpos.settings.devlopement')
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -62,7 +62,7 @@ try:
         print('  curl -X POST http://localhost:8000/auth/login/ \\')
         print('       -H "Content-Type: application/json" \\')
         print('       -d \'{"username": "admin", "password": "admin123"}\'')
-        
+    
     if __name__ == '__main__':
         test_auth_endpoints()
         
