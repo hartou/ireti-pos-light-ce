@@ -23,4 +23,5 @@ python-decouple==3.8
 django-cors-headers==4.3.0
 djangorestframework==3.14.0
 stripe>=6.0.0 
+drf-spectacular[sidecar]==0.27.2
 # sshtunnel==0.4.0
