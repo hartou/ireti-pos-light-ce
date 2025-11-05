@@ -97,6 +97,9 @@ urlpatterns = [
         # Payment URLs
         path("payments/", include('payments.urls')),
 
+        # Direct auth endpoint (for backward compatibility)
+        path('auth/login/', api_views.AuthAPIView.as_view(), name='auth_login'),
+
         # API v1 URLs
         path('api/v1/', include([
             path('auth/login/', api_views.AuthAPIView.as_view(), name='api_login'),
