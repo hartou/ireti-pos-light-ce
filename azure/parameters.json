@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "containerAppName": {
+      "value": "ireti-pos-app"
+    },
+    "containerAppsEnvironmentName": {
+      "value": "ireti-pos-env"
+    },
+    "containerImage": {
+      "value": "ghcr.io/hartou/ireti-pos-light-ce:latest"
+    },
+    "djangoSuperuserPassword": {
+      "value": "admin123"
+    },
+    "stripeSecretKey": {
+      "value": "sk_test_YOUR_STRIPE_SECRET_KEY_HERE"
+    },
+    "stripePublishableKey": {
+      "value": "pk_test_YOUR_STRIPE_PUBLISHABLE_KEY_HERE"
+    },
+    "stripeWebhookSecret": {
+      "value": "whsec_test_12345"
+    }
+  }
+}
