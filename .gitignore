@@ -80,6 +80,7 @@ yarn.lock
 # Logs
 logs/
 *.log
+*.txt
 pip-log.txt
 pip-delete-this-directory.txt
 
