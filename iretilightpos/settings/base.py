@@ -402,7 +402,7 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_NO_READ_ONLY_REQUIRED': True,
     'SCHEMA_PATH_PREFIX': r'/api/v[0-9]',
-    'SCHEMA_PATH_PREFIX_TRIM': True,
+    'SCHEMA_PATH_PREFIX_TRIM': False,
     'TAGS': [
         {'name': 'Authentication', 'description': 'User authentication and session management'},
         {'name': 'Payments', 'description': 'Payment processing and Stripe integration'},
