@@ -17,7 +17,7 @@ mysqlclient==2.2.0
 Django==4.2.26
 psycopg2==2.9.7
 gunicorn==23.0.0
-whitenoise==6.5.0
+whitenoise==6.11.0
 stripe==11.1.0
 python-decouple==3.8
 django-cors-headers==4.3.0
