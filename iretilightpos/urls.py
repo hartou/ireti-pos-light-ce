@@ -21,10 +21,18 @@ from transaction import views as transaction_views
 from cart import views as cart_views
 from . import views as views
 from . import admin_views  # Import integrated admin views
+from . import api_views  # Import API views
 from django.contrib.auth import views as auth_views
 from inventory import views as inventory_views
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
+
+# drf-spectacular imports for API documentation
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView
+)
 
 
 urlpatterns = [
@@ -88,6 +96,21 @@ urlpatterns = [
 
         # Payment URLs
         path("payments/", include('payments.urls')),
+
+        # API v1 URLs
+        path('api/v1/', include([
+            path('auth/login/', api_views.AuthAPIView.as_view(), name='api_login'),
+            path('cart/', api_views.CartAPIView.as_view(), name='api_cart'),
+            path('products/search/', api_views.ProductSearchAPIView.as_view(), name='api_product_search'),
+            path('dashboard/stats/', api_views.DashboardStatsAPIView.as_view(), name='api_dashboard_stats'),
+        ])),
+
+        # API Documentation URLs
+        path('api/docs/', include([
+            path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+            path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+            path('schema/', SpectacularAPIView.as_view(), name='schema'),
+        ])),
 
         # Integrated Administration URLs (replace external admin)
         path('administration/', admin_views.admin_dashboard, name='admin_dashboard'),
