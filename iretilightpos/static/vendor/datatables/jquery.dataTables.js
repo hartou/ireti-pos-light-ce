@@ -14876,11 +14876,18 @@
 	
 		// html
 		"html-pre": function ( a ) {
-			return _empty(a) ?
-				'' :
-				a.replace ?
-					a.replace( /<.*?>/g, "" ).toLowerCase() :
-					a+'';
+			if (_empty(a)) {
+				return '';
+			}
+			if (a.replace) {
+				var prev;
+				do {
+					prev = a;
+					a = a.replace(/<.*?>/g, "");
+				} while (a !== prev);
+				return a.toLowerCase();
+			}
+			return a + '';
 		},
 	
 		// string
