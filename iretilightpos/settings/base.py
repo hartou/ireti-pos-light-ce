@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'transaction',
     'cart',
     'payments',  # Stripe payment integration
+    'rest_framework',  # Django REST Framework
+    'drf_spectacular',  # API documentation
+    'drf_spectacular_sidecar',  # API documentation static files
     'import_export',
     'rangefilter',
     'django_admin_logs',
@@ -341,5 +344,130 @@ STRIPE_LIVE_MODE = STRIPE_SECRET_KEY.startswith('sk_live_') if STRIPE_SECRET_KEY
 
 # Store Configuration
 STORE_NAME = "Ireti POS Light"
+
+# =============================================================================
+# Django REST Framework Configuration
+# =============================================================================
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}
+
+# =============================================================================
+# drf-spectacular (OpenAPI/Swagger) Configuration
+# =============================================================================
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Ireti POS Light CE API',
+    'DESCRIPTION': '''
+    **Ireti POS Light Community Edition API Documentation**
+    
+    A comprehensive Point of Sale (POS) system API built with Django and Django REST Framework.
+    This API provides endpoints for:
+    
+    - 🔐 **Authentication & User Management**
+    - 🛒 **Cart & Shopping Operations**
+    - 💰 **Transaction Processing**
+    - 💳 **Payment Processing (Stripe Integration)**
+    - 📦 **Inventory Management**
+    - 📊 **Dashboard & Analytics**
+    - 🧾 **Receipt & Reporting**
+    
+    **Authentication Required**: Most endpoints require authentication via session or token.
+    
+    **Base URL**: Available at your deployed application URL
+    
+    **Test Credentials** (Development):
+    - Username: `admin`
+    - Password: `admin123`
+    ''',
+    'VERSION': '1.1.0-CE',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+    'SCHEMA_PATH_PREFIX': r'/api/v[0-9]',
+    'SCHEMA_PATH_PREFIX_TRIM': False,
+    'TAGS': [
+        {'name': 'Authentication', 'description': 'User authentication and session management'},
+        {'name': 'Payments', 'description': 'Payment processing and Stripe integration'},
+        {'name': 'Transactions', 'description': 'Transaction management and processing'},
+        {'name': 'Cart', 'description': 'Shopping cart operations'},
+        {'name': 'Inventory', 'description': 'Product and inventory management'},
+        {'name': 'Dashboard', 'description': 'Analytics and dashboard data'},
+        {'name': 'System', 'description': 'System configuration and utilities'},
+    ],
+    'CONTACT': {
+        'name': 'Ireti POS Support',
+        'url': 'https://github.com/hartou/ireti-pos-light-ce',
+    },
+    'LICENSE': {
+        'name': 'Community Edition License',
+        'url': 'https://github.com/hartou/ireti-pos-light-ce/blob/main/LICENSE',
+    },
+    'EXTERNAL_DOCS': {
+        'description': 'GitHub Repository',
+        'url': 'https://github.com/hartou/ireti-pos-light-ce',
+    },
+    'SERVE_AUTHENTICATION': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': False,
+        'defaultModelExpandDepth': 1,
+        'defaultModelsExpandDepth': 1,
+        'displayRequestDuration': True,
+        'docExpansion': 'list',
+        'filter': True,
+        'operationsSorter': 'alpha',
+        'showExtensions': True,
+        'tagsSorter': 'alpha',
+        'tryItOutEnabled': True,
+    },
+    'REDOC_UI_SETTINGS': {
+        'hideDownloadButton': False,
+        'expandResponses': '200,201',
+        'pathInMiddlePanel': True,
+        'nativeScrollbars': True,
+        'theme': {
+            'colors': {
+                'primary': {
+                    'main': '#1976d2'
+                }
+            },
+            'typography': {
+                'fontSize': '14px',
+                'lineHeight': '1.5em',
+                'code': {
+                    'fontSize': '13px'
+                },
+                'headings': {
+                    'fontFamily': 'Roboto, sans-serif'
+                }
+            }
+        }
+    },
+    'PREPROCESSING_HOOKS': [],
+    'POSTPROCESSING_HOOKS': [],
+    'ENUM_NAME_OVERRIDES': {},
+    'ENUM_GENERATE_CHOICE_DESCRIPTION': True,
+}
 
 

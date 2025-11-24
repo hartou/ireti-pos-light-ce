@@ -26,6 +26,14 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count, Avg
 from django.template.loader import get_template
 
+# DRF and documentation imports
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
+
 from .models import PaymentTransaction, PaymentRefund, PaymentMethod, PaymentWebhook
 from .services import stripe_service
 from .metrics import payment_metrics
@@ -48,13 +56,14 @@ from transaction.models import transaction
 logger = logging.getLogger(__name__)
 
 
-class PaymentAPIView(View):
+class PaymentAPIView(APIView):
     """Base API view for payment endpoints with common functionality."""
     
     def dispatch(self, request, *args, **kwargs):
         """Add common headers and validation."""
         response = super().dispatch(request, *args, **kwargs)
-        response['Content-Type'] = 'application/json'
+        if hasattr(response, '_headers'):
+            response['Content-Type'] = 'application/json'
         return response
     
     def json_response(self, data: Dict[str, Any], status: int = 200) -> JsonResponse:
@@ -73,6 +82,95 @@ class PaymentAPIView(View):
 
 
 @method_decorator([csrf_exempt, payment_processor_required], name='dispatch')
+@extend_schema_view(
+    post=extend_schema(
+        operation_id='create_payment_intent',
+        summary='Create Payment Intent',
+        description='Create a new Stripe PaymentIntent for processing payments.',
+        tags=['Payments'],
+        request={
+            'type': 'object',
+            'properties': {
+                'amount': {
+                    'type': 'number',
+                    'format': 'decimal',
+                    'description': 'Payment amount (e.g., 20.00 for $20)',
+                    'example': 20.00
+                },
+                'currency': {
+                    'type': 'string',
+                    'description': 'Currency code',
+                    'default': 'usd',
+                    'example': 'usd'
+                },
+                'payment_method_types': {
+                    'type': 'array',
+                    'items': {'type': 'string'},
+                    'description': 'Allowed payment method types',
+                    'default': ['card'],
+                    'example': ['card']
+                },
+                'capture_method': {
+                    'type': 'string',
+                    'description': 'Payment capture method',
+                    'enum': ['automatic', 'manual'],
+                    'default': 'automatic',
+                    'example': 'automatic'
+                },
+                'metadata': {
+                    'type': 'object',
+                    'description': 'Additional metadata for the payment',
+                    'example': {'order_id': '12345'}
+                }
+            },
+            'required': ['amount']
+        },
+        responses={
+            200: {
+                'type': 'object',
+                'properties': {
+                    'id': {'type': 'string', 'description': 'Payment intent ID'},
+                    'client_secret': {'type': 'string', 'description': 'Client secret for frontend'},
+                    'amount': {'type': 'number', 'format': 'decimal'},
+                    'currency': {'type': 'string'},
+                    'status': {'type': 'string'},
+                    'created': {'type': 'string', 'format': 'date-time'}
+                }
+            },
+            400: {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'boolean'},
+                    'message': {'type': 'string'},
+                    'error_code': {'type': 'string'}
+                }
+            }
+        },
+        examples=[
+            OpenApiExample(
+                'Basic Payment Intent',
+                value={
+                    'amount': 20.00,
+                    'currency': 'usd'
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'Payment Intent with Metadata',
+                value={
+                    'amount': 50.00,
+                    'currency': 'usd',
+                    'payment_method_types': ['card'],
+                    'metadata': {
+                        'order_id': '12345',
+                        'customer_id': 'cust_123'
+                    }
+                },
+                request_only=True,
+            ),
+        ],
+    )
+)
 class CreatePaymentIntentView(PaymentAPIView):
     """API endpoint to create a Stripe PaymentIntent."""
     
@@ -89,12 +187,20 @@ class CreatePaymentIntentView(PaymentAPIView):
             
             # Validate required fields
             if not amount:
-                return self.error_response("Amount is required", 400, "missing_amount")
+                return Response({
+                    'error': True,
+                    'message': "Amount is required",
+                    'error_code': "missing_amount"
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 amount_decimal = Decimal(str(amount))
             except (ValueError, TypeError):
-                return self.error_response("Invalid amount format", 400, "invalid_amount")
+                return Response({
+                    'error': True,
+                    'message': "Invalid amount format",
+                    'error_code': "invalid_amount"
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             # Add POS metadata
             metadata.update({
@@ -124,27 +230,41 @@ class CreatePaymentIntentView(PaymentAPIView):
             
             logger.info(f"PaymentIntent created: {intent_data['id']} for amount {amount_decimal}")
             
-            return self.json_response({
-                'success': True,
-                'payment_intent': {
-                    'id': intent_data['id'],
-                    'client_secret': intent_data['client_secret'],
-                    'amount': intent_data['amount'],
-                    'currency': intent_data['currency'],
-                    'status': intent_data['status']
-                },
+            return Response({
+                'id': intent_data['id'],
+                'client_secret': intent_data['client_secret'],
+                'amount': intent_data['amount'],
+                'currency': intent_data['currency'],
+                'status': intent_data['status'],
+                'created': intent_data.get('created'),
                 'local_transaction_id': payment_transaction.id
             })
             
         except PaymentAmountError as e:
-            return self.error_response(str(e), 400, "invalid_amount")
+            return Response({
+                'error': True,
+                'message': str(e),
+                'error_code': "invalid_amount"
+            }, status=status.HTTP_400_BAD_REQUEST)
         except PaymentIntentError as e:
-            return self.error_response(f"Payment creation failed: {str(e)}", 500, "payment_creation_failed")
+            return Response({
+                'error': True,
+                'message': f"Payment creation failed: {str(e)}",
+                'error_code': "payment_creation_failed"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except json.JSONDecodeError:
-            return self.error_response("Invalid JSON format", 400, "invalid_json")
+            return Response({
+                'error': True,
+                'message': "Invalid JSON format",
+                'error_code': "invalid_json"
+            }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(f"Unexpected error creating payment intent: {str(e)}")
-            return self.error_response("Internal server error", 500, "internal_error")
+            return Response({
+                'error': True,
+                'message': "Internal server error",
+                'error_code': "internal_error"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator([csrf_exempt, payment_processor_required], name='dispatch') 

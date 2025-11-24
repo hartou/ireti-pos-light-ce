@@ -10,7 +10,20 @@ DEBUG = True
 SECRET_KEY = os.getenv('SECRET_KEY_DEV', 'django_dev_secret_key_online-retail-pos-1234')
 
 ALLOWED_HOSTS = [ip_address, '127.0.0.1', 'localhost', 'testserver']
+
+# Allow additional hosts from environment variable (for Azure Container Apps)
+if os.getenv('ALLOWED_HOSTS'):
+    additional_hosts = os.getenv('ALLOWED_HOSTS').split(',')
+    ALLOWED_HOSTS.extend([host.strip() for host in additional_hosts])
+
 CSRF_TRUSTED_ORIGINS = [f"http://{ip_address}", "http://127.0.0.1", "http://localhost"]
+
+# Add HTTPS trusted origins for Azure Container Apps
+if os.getenv('ALLOWED_HOSTS'):
+    for host in os.getenv('ALLOWED_HOSTS').split(','):
+        host = host.strip()
+        if host not in ['127.0.0.1', 'localhost']:
+            CSRF_TRUSTED_ORIGINS.append(f"https://{host}")
 
 print(f"Connect on this address:") # get the ip address from the command line.
 print(f"http://127.0.0.1:8000")

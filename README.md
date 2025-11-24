@@ -92,7 +92,7 @@ The setup script will guide you through choosing development or production setup
 # Pull the latest CE image from GitHub Container Registry
 docker pull ghcr.io/hartou/ireti-pos-light-ce:latest
 
-# Run with Stripe configuration
+# Run with Stripe configuration (REQUIRED!)
 docker run -p 8000:8000 \
   -e STRIPE_SECRET_KEY=sk_test_your_key \
   -e STRIPE_PUBLISHABLE_KEY=pk_test_your_key \
@@ -102,6 +102,8 @@ docker run -p 8000:8000 \
   -e DJANGO_SUPERUSER_EMAIL=admin@example.com \
   ghcr.io/hartou/ireti-pos-light-ce:latest
 ```
+
+⚠️ **IMPORTANT**: The container requires valid Stripe API keys to start. Get your keys from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys).
 
 **Access the application:**
 - Main POS Interface: http://localhost:8000
